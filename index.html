@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Hotel Kanzler - リアルタイム共有駐車場マップ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <style>
+        :root {
+            --bg-main: #f1f5f9;
+            --sidebar-bg: #ffffff;
+            --accent-blue: #3b82f6;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --takasago-color: #f97316;
+            --ev-color: #22c55e;
+            --blocked-pattern: repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 10px, #cbd5e1 10px, #cbd5e1 11px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+            color: #22c55e;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .pool-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .vehicle-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: 0.2s;
+        }
+
+        .vehicle-card:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .vehicle-card .plate {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .vehicle-card .driver {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .edit-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-light);
+            background: #fafafa;
+        }
+
+        .secondary-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 40px;
+            overflow: hidden;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            color: #334155;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .color-box.takasago {
+            background: var(--takasago-color);
+        }
+
+        .color-box.ev {
+            background: var(--ev-color);
+        }
+
+        .color-box.blocked {
+            background: var(--blocked-pattern);
+            outline: 1px solid #cbd5e1;
+        }
+
+        .canvas-container {
+            flex: 1;
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .zoom-controls button {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid var(--border-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: 0.2s;
+        }
+
+        .zoom-controls button:hover {
+            background: var(--bg-main);
+            color: var(--accent-blue);
+        }
+
+        canvas {
+            display: block;
+            image-rendering: -webkit-optimize-contrast;
+            cursor: default;
+        }
+
+        .tooltip {
+            position: fixed;
+            pointer-events: none;
+            background: white;
+            border: 1px solid var(--border-light);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            font-size: 0.85rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        #load-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="load-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top:20px; font-weight:600; color:var(--text-muted)">CONNECTING TO SHARED BOARD...</p>
+    </div>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Vehicles</h2>
+                <div class="sync-status">
+                    <div class="sync-dot"></div>
+                    <span>SHARED MODE ACTIVE (リアルタイム同期中)</span>
+                </div>
+            </div>
+            <div id="vehicle-pool" class="pool-list"></div>
+            <div class="sidebar-footer">
+                <button id="reset-btn" class="secondary-btn">Reset All Sync Data</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="app-header">
+                <h1>Living Hotel Kanzler parking lot map</h1>
+                <div class="legend">
+                    <div class="legend-item"><span class="color-box takasago"></span>TAKASAGO</div>
+                    <div class="legend-item"><span class="color-box ev"></span>EV</div>
+                    <div class="legend-item"><span class="color-box blocked"></span>BLOCKED</div>
+                </div>
+            </header>
+
+            <div class="canvas-container">
+                <canvas id="parkingCanvas"></canvas>
+                <div class="zoom-controls">
+                    <button id="zoom-in">+</button>
+                    <button id="zoom-out">−</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('parkingCanvas');
+            const ctx = canvas.getContext('2d');
+            const poolEl = document.getElementById('vehicle-pool');
+            const resetBtn = document.getElementById('reset-btn');
+            const tooltipEl = document.getElementById('tooltip');
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+
+            const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://gun-us.herokuapp.com/gun']);
+            const room = gun.get('living_hotel_kanzler_parking_final_v1');
+
+            let ALL_DRIVERS = {
+                1: { plate: "M-AF 1576", driver1: "Takehiro Nagaoka", driver2: "Kei Suzuki" },
+                2: { plate: "M-AF 1574", driver1: "Takaaki Kawabe", driver2: "Mayuko Takenaka" },
+                3: { plate: "M-AF 1479", driver1: "Dogen Megumi" },
+                4: { plate: "M-AF 1548", driver1: "Daisuke Sugimoto" },
+                5: { plate: "M-AF 1318", driver1: "Vitalina Ferrara" },
+                6: { plate: "M-AF 1197", driver1: "Ander Hernandez" },
+                7: { plate: "M-AF 1154", driver1: "Takashi Nakanishi" },
+                8: { plate: "M-AF 1326", driver1: "Hiro Tomoto", driver2: "Tatsuya Makoshi" },
+                9: { plate: "M-AF 1352", driver1: "Naga Garlapati" },
+                10: { plate: "M-AF 1343", driver1: "Marta Pimenta (PMO)" },
+                11: { plate: "M-AF 1159", driver1: "Rodrigo M Mariano (SD)" },
+                12: { plate: "M-AF 1455", driver1: "Joao Miguel Santos (PP)" },
+                13: { plate: "M-AF 1604", driver1: "Luis F. Silva (F&A)" },
+                14: { plate: "M-AF 1451", driver1: "Jorge Cunha Machado (EWM)" },
+                15: { plate: "M-AF 1450", driver1: "Bruno Brito (QM)" }
+            };
+
+            const TAKASAGO_SPOTS = [58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71];
+
+            let currentLayout = {};
+            let viewOffset = { x: 0, y: 0 };
+            let viewScale = 1.0;
+            let isPanning = false, dragSource = null, mousePos = { x: 0, y: 0 }, worldPos = { x: 0, y: 0 }, lastMousePos = { x: 0, y: 0 }, hoverSpotId = null;
+
+            function syncToCloud() {
+                room.get('state').put(JSON.stringify({ layout: currentLayout, drivers: ALL_DRIVERS, offset: viewOffset, scale: viewScale }));
+            }
+
+            room.get('state').on((dataStr) => {
+                if (!dataStr) return;
+                const data = JSON.parse(dataStr);
+                currentLayout = data.layout || {};
+                ALL_DRIVERS = data.drivers || ALL_DRIVERS;
+                viewOffset = data.offset || viewOffset;
+                viewScale = data.scale || viewScale;
+                document.getElementById('load-overlay').style.display = 'none';
+                updateUI(); draw();
+            });
+
+            setTimeout(() => { document.getElementById('load-overlay').style.display = 'none'; draw(); }, 3000);
+
+            const cellW = 120, cellH = 50, gapD = 40, gapFG = 350;
+            canvas.width = 1400; canvas.height = 1200;
+            const SPOT_REGISTRY = {};
+
+            function defineLayout() {
+                const reg = (id, x, y, w, h, type = 'regular', label = null) => {
+                    let actualType = type;
+                    if (TAKASAGO_SPOTS.includes(Number(id)) || TAKASAGO_SPOTS.includes(id)) actualType = 'takasago';
+                    else if (String(id).includes("EV")) actualType = 'ev';
+                    else if (!String(id).match(/^\d+/)) actualType = 'blocked';
+                    SPOT_REGISTRY[id] = { id, x, y, w, h, type: actualType, label: label || id };
+                };
+                const startX = 60, startY = 80;
+                [28, 27, 26, 25].forEach((n, i) => reg(String(n), startX, startY + i * cellH, cellW, cellH));
+                reg("C-G", startX, startY + 4 * cellH, cellW, cellH, 'blocked', " ");
+                [24, 22, 20, 18, 16, 14].forEach((n, i) => reg(String(n), startX, startY + (5 + i) * cellH, cellW, cellH));
+                ["12 / 13", "10 / 11", "8 / 9", "6 / 7", "5 / 4"].forEach((id, i) => reg(id, startX, startY + (11 + i) * cellH, cellW, cellH));
+                const ex = startX + cellW + gapD;
+                [42, 41, 40, 39].forEach((n, i) => reg(String(n), ex, startY + i * cellH, cellW, cellH));
+                reg("E-G1", ex, startY + 4 * cellH, cellW, cellH / 2, 'blocked', " ");
+                reg("E-G2", ex, startY + 4.5 * cellH, cellW, cellH * 1.5, 'blocked', " ");
+                [38, 37, 36].forEach((n, i) => reg(String(n), ex, startY + (6 + i) * cellH, cellW, cellH));
+                ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((id, i) => reg(id, ex, startY + (9 + i) * cellH, cellW, cellH));
+                const hx = ex + cellW + gapFG, ix = hx + cellW;
+                ["E", "F", "G", "H"].forEach((col, i) => reg("T-" + col, ex + i * (hx - ex) / 3, startY - cellH, (hx - ex) / 3, cellH, 'blocked', " "));
+                reg("I-T", ix, startY - cellH, cellW, cellH, 'blocked', " ");
+                [54, 55, 56, 57].forEach((n, i) => reg(String(n), ix, startY + i * cellH, cellW, cellH));
+                const rY = startY + 4 * cellH;
+                const hPs = [58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, null];
+                const iPs = [59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, "81 Reserved", "83 Reserved"];
+                iPs.forEach((id, r) => {
+                    if (hPs[r]) reg(String(hPs[r]), hx, rY + r * cellH, cellW, cellH);
+                    if (iPs[r]) reg(String(iPs[r]), ix, rY + r * cellH, cellW, cellH);
+                });
+                const bY = startY + 18 * cellH;
+                reg("B-G", startX, bY, cellW, cellH, 'blocked', " ");
+                [85, 86, 87, 88].forEach((n, i) => reg(String(n), startX + cellW + gapD + i * cellW, bY, cellW, cellH));
+            }
+
+            function updateUI() {
+                poolEl.innerHTML = '';
+                const used = Object.values(currentLayout).map(d => d.plate);
+                Object.entries(ALL_DRIVERS).forEach(([idx, d]) => {
+                    if (used.includes(d.plate)) return;
+                    const card = document.createElement('div');
+                    card.className = 'vehicle-card';
+                    card.innerHTML = `<div class="card-info"><span class="plate">${d.plate}</span><span class="driver">${d.driver1}${d.driver2 ? ' / ' + d.driver2 : ''}</span></div><button class="edit-btn">✏️</button>`;
+                    card.draggable = true;
+                    card.addEventListener('dragstart', () => { dragSource = { type: 'pool', id: idx, data: d }; });
+                    const btn = card.querySelector('.edit-btn');
+                    btn.addEventListener('mousedown', e => e.stopPropagation());
+                    btn.addEventListener('click', e => { e.stopPropagation(); editDriver(idx); });
+                    poolEl.appendChild(card);
+                });
+            }
+
+            function editDriver(idx) {
+                const d = ALL_DRIVERS[idx];
+                const n1 = prompt("共有ドライバ名1を修正:", d.driver1); if (n1 === null) return;
+                const n2 = prompt("共有ドライバ名2（空欄可）:", d.driver2 || "");
+                ALL_DRIVERS[idx] = { ...d, driver1: n1, driver2: n2 || undefined };
+                Object.keys(currentLayout).forEach(id => { if (currentLayout[id].plate === d.plate) currentLayout[id] = { ...currentLayout[id], ...ALL_DRIVERS[idx] }; });
+                syncToCloud(); updateUI(); draw();
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(viewOffset.x, viewOffset.y);
+                ctx.scale(viewScale, viewScale);
+                ctx.strokeStyle = "#eff6ff"; ctx.lineWidth = 1;
+                for (let i = -1000; i < 3000; i += 50) { ctx.beginPath(); ctx.moveTo(i, -1000); ctx.lineTo(i, 3000); ctx.stroke(); }
+                for (let i = -1000; i < 3000; i += 50) { ctx.beginPath(); ctx.moveTo(-1000, i); ctx.lineTo(3000, i); ctx.stroke(); }
+                Object.values(SPOT_REGISTRY).forEach(s => {
+                    const { x, y, w, h, id, type, label } = s;
+                    ctx.fillStyle = (type === 'takasago') ? "rgba(249,115,22,0.12)" : (type === 'ev' ? "rgba(34,197,94,0.08)" : (type === 'blocked' ? "#f8fafc" : "#fff"));
+                    if (hoverSpotId === id) ctx.fillStyle = "rgba(59,130,246,0.12)";
+                    ctx.fillRect(x, y, w, h);
+                    ctx.strokeStyle = (type === 'takasago') ? "#f97316" : "#cbd5e1";
+                    ctx.lineWidth = (type === 'takasago') ? 2 : 1.2;
+                    ctx.strokeRect(x, y, w, h);
+                    if (type === 'blocked') {
+                        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h);
+                        ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 0.5; ctx.stroke();
+                    } else {
+                        ctx.fillStyle = "#334155"; ctx.font = "bold 13px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                        ctx.fillText(label, x + w / 2, y + h / 2);
+                        if (type === 'takasago') { ctx.fillStyle = "#ea580c"; ctx.font = "900 8px sans-serif"; ctx.fillText("TAKASAGO", x + w / 2, y + h / 2 + 14); }
+                        if (type === 'ev') { ctx.fillStyle = "#22c55e"; ctx.font = "14px sans-serif"; ctx.fillText("⚡", x + w / 2, y + h / 2 - 18); }
+                    }
+                    const car = currentLayout[id];
+                    if (car && (!dragSource || dragSource.id !== id)) drawCar(x + 10, y + 10, w - 20, h - 20, car, false);
+                });
+                ctx.restore();
+                if (dragSource) drawCar(mousePos.x - 50, mousePos.y - 25, 100, 50, dragSource.data, true);
+            }
+
+            function drawCar(x, y, w, h, d, ghost) {
+                ctx.save();
+                if (ghost) ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill();
+                ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center";
+                ctx.fillText(d.plate.split(' ')[1] || d.plate, x + w / 2, y + h / 2 + 2);
+                ctx.restore();
+            }
+
+            function getXY(e) {
+                const r = canvas.getBoundingClientRect();
+                const mx = (e.clientX - r.left) * (canvas.width / r.width);
+                const my = (e.clientY - r.top) * (canvas.height / r.height);
+                return { sx: mx, sy: my, wx: (mx - viewOffset.x) / viewScale, wy: (my - viewOffset.y) / viewScale };
+            }
+
+            canvas.addEventListener('mousemove', e => {
+                const p = getXY(e); mousePos = { x: p.sx, y: p.sy }; worldPos = { x: p.wx, y: p.wy };
+                if (isPanning) {
+                    viewOffset.x += (e.clientX - lastMousePos.x); viewOffset.y += (e.clientY - lastMousePos.y);
+                    lastMousePos = { x: e.clientX, y: e.clientY };
+                    draw();
+                } else {
+                    const s = Object.values(SPOT_REGISTRY).find(s => worldPos.x >= s.x && worldPos.x <= s.x + s.w && worldPos.y >= s.y && worldPos.y <= s.y + s.h);
+                    hoverSpotId = s ? s.id : null;
+                    if (s && currentLayout[s.id]) showTooltip(e, currentLayout[s.id]); else hideTooltip();
+                    draw();
+                }
+            });
+
+            canvas.addEventListener('mousedown', e => {
+                lastMousePos = { x: e.clientX, y: e.clientY };
+                const p = getXY(e);
+                const s = Object.values(SPOT_REGISTRY).find(s => p.wx >= s.x && p.wx <= s.x + s.w && p.wy >= s.y && p.wy <= s.y + s.h);
+                if (s && currentLayout[s.id]) { dragSource = { type: 'canvas', id: s.id, data: currentLayout[s.id] }; }
+                else { isPanning = true; canvas.style.cursor = 'move'; }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (dragSource && hoverSpotId && SPOT_REGISTRY[hoverSpotId].type !== 'blocked') {
+                    if (dragSource.type === 'canvas') delete currentLayout[dragSource.id];
+                    currentLayout[hoverSpotId] = dragSource.data;
+                    syncToCloud();
+                } else if (dragSource && dragSource.type === 'canvas') { delete currentLayout[dragSource.id]; syncToCloud(); }
+                dragSource = null; isPanning = false; canvas.style.cursor = 'default';
+                updateUI(); draw();
+            });
+
+            zoomInBtn.addEventListener('click', () => { viewScale *= 1.2; syncToCloud(); draw(); });
+            zoomOutBtn.addEventListener('click', () => { viewScale /= 1.2; syncToCloud(); draw(); });
+            canvas.addEventListener('dragover', e => e.preventDefault());
+            canvas.addEventListener('drop', () => { if (dragSource && hoverSpotId && SPOT_REGISTRY[hoverSpotId].type !== 'blocked') { currentLayout[hoverSpotId] = dragSource.data; syncToCloud(); dragSource = null; draw(); } });
+
+            function showTooltip(e, d) {
+                tooltipEl.innerHTML = `<strong>${d.plate}</strong><br>${d.driver1}${d.driver2 ? '<br>' + d.driver2 : ''}`;
+                tooltipEl.style.left = (e.clientX + 15) + 'px'; tooltipEl.style.top = (e.clientY + 15) + 'px'; tooltipEl.style.opacity = 1;
+            }
+            function hideTooltip() { tooltipEl.style.opacity = 0; }
+
+            resetBtn.addEventListener('click', () => { if (confirm("警告: 全員の共有データを初期化しますか？")) { currentLayout = {}; syncToCloud(); updateUI(); draw(); } });
+
+            defineLayout(); updateUI();
+            setInterval(draw, 100);
+        })();
+    </script>
+</body>
+
+</html>
