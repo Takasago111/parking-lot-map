@@ -8,9 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
@@ -48,7 +46,6 @@
             width: 100vw;
         }
 
-        /* ===== SIDEBAR ===== */
         .sidebar {
             width: 380px;
             min-width: 380px;
@@ -74,13 +71,15 @@
 
         .close-sidebar {
             display: none;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             background: #f1f5f9;
             border: none;
             border-radius: 10px;
             font-size: 1.5rem;
             cursor: pointer;
+            align-items: center;
+            justify-content: center;
         }
 
         .sync-badge {
@@ -91,7 +90,6 @@
             font-weight: 700;
             color: #10b981;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .sync-dot {
@@ -124,7 +122,7 @@
         }
 
         .vehicle-card {
-            background: #ffffff;
+            background: #fff;
             border: 1px solid var(--border-light);
             border-radius: 12px;
             padding: 16px 14px;
@@ -133,7 +131,6 @@
             gap: 12px;
             cursor: pointer;
             transition: all 0.2s;
-            user-select: none;
         }
 
         .vehicle-card:hover,
@@ -155,8 +152,6 @@
             font-size: 0.7rem;
             font-weight: 800;
             color: var(--accent-blue);
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
             margin-bottom: 4px;
         }
 
@@ -166,7 +161,6 @@
             color: #334155;
             line-height: 1.35;
             word-wrap: break-word;
-            overflow-wrap: break-word;
         }
 
         .edit-btn {
@@ -181,12 +175,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
-        }
-
-        .edit-btn:hover {
-            background: var(--accent-blue);
-            color: white;
         }
 
         .sidebar-footer {
@@ -204,10 +192,8 @@
             font-weight: 700;
             color: #ef4444;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        /* ===== MAIN CONTENT ===== */
         .main {
             flex: 1;
             display: flex;
@@ -249,13 +235,6 @@
             font-size: 0.8rem;
             color: #475569;
             cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .pdf-btn:hover {
-            background: var(--accent-blue);
-            color: white;
-            border-color: var(--accent-blue);
         }
 
         .legend {
@@ -295,7 +274,6 @@
             background: #e2e8f0;
         }
 
-        /* ===== CANVAS VIEWPORT ===== */
         .viewport {
             flex: 1;
             background: white;
@@ -314,7 +292,6 @@
             touch-action: none;
         }
 
-        /* ===== CONTROLS ===== */
         .zoom-controls {
             position: absolute;
             bottom: 20px;
@@ -328,88 +305,36 @@
         .zoom-btn {
             width: 52px;
             height: 52px;
-            background: #ffffff;
+            background: #fff;
             border: 2px solid #cbd5e1;
             border-radius: 14px;
             font-size: 1.6rem;
-            font-weight: 500;
             color: #334155;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-            transition: all 0.2s;
         }
 
-        /* ===== MOBILE RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .app {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                width: 100%;
-                min-width: 100%;
-                z-index: 10001;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .close-sidebar {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .main {
-                padding: 16px;
-                height: 100dvh;
-            }
-
-            .header h1 {
-                font-size: 1rem;
-            }
-
-            .legend {
-                display: none;
-            }
-
-            .fab-pool {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .zoom-controls {
-                bottom: 90px;
-                right: 16px;
-            }
-        }
-
+        /* ===== MOBILE FAB (FIXED) ===== */
         .fab-pool {
             display: none;
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             background: var(--accent-blue);
             color: white;
             border: none;
             border-radius: 50%;
-            font-size: 1.5rem;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            font-size: 1.8rem;
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.5);
             z-index: 9999;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
         }
 
         .selection-banner {
@@ -437,6 +362,7 @@
             padding: 8px 16px;
             border-radius: 8px;
             margin-left: 12px;
+            cursor: pointer;
         }
 
         #boot {
@@ -461,6 +387,66 @@
         @keyframes spin {
             to {
                 transform: rotate(360deg);
+            }
+        }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                min-width: 100%;
+                z-index: 10001;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .close-sidebar {
+                display: flex;
+            }
+
+            .main {
+                padding: 16px;
+                height: 100dvh;
+            }
+
+            .header h1 {
+                font-size: 1rem;
+            }
+
+            .legend {
+                display: none;
+            }
+
+            .viewport {
+                border-radius: 16px;
+            }
+
+            .fab-pool {
+                display: flex;
+            }
+
+            .zoom-controls {
+                bottom: 100px;
+                right: 16px;
+            }
+
+            .zoom-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
             }
         }
     </style>
@@ -526,6 +512,7 @@
             const poolEl = document.getElementById('pool');
             const sidebar = document.getElementById('sidebar');
             const fabPool = document.getElementById('fabPool');
+            const closeSidebar = document.getElementById('closeSidebar');
             const selectionBanner = document.getElementById('selectionBanner');
             const selectionText = document.getElementById('selectionText');
 
@@ -550,10 +537,9 @@
             let layout = {};
             let localDrivers = JSON.parse(JSON.stringify(DRIVERS));
             let view = { x: 180, y: 20, scale: 0.8 };
-            let drag = null;
+            let pan = null;
             let hover = null;
             let mouse = { x: 0, y: 0 };
-            let pan = null;
             let selectedVehicle = null;
             let isMobile = window.innerWidth <= 768;
 
@@ -582,13 +568,7 @@
                 ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((n, i) => reg(n, ex, sY + (8 + i) * CELL_H, CELL_W, CELL_H));
 
                 const hx = ex + CELL_W + 350, ix = hx + CELL_W;
-
-                // Add Top Blocked Row (Matching diagonal cross area in reference)
-                for (let i = 0; i < 5; i++) {
-                    reg(`TOP_BL_${i}`, ex + i * (ix - ex) / 4, sY - 2 * CELL_H, (ix - ex) / 4, CELL_H, 'blocked', " ");
-                }
-
-                // Column I (Rightmost top area)
+                for (let i = 0; i < 5; i++) reg(`TOP_BL_${i}`, ex + i * (ix - ex) / 4, sY - 2 * CELL_H, (ix - ex) / 4, CELL_H, 'blocked', " ");
                 reg("53_SHUTTER", ix, sY - CELL_H, CELL_W, CELL_H, 'blocked', "53 SHUTTER");
                 [54, 55, 56, 57].forEach((n, i) => reg(String(n), ix, sY + i * CELL_H, CELL_W, CELL_H));
                 const gridY = sY + 4 * CELL_H;
@@ -603,20 +583,11 @@
 
             async function initSupabase() {
                 const { data: spots, error: sErr } = await supabase.from('parking_spots').select('*');
-                if (sErr) {
-                    console.error("Database table error. Please run the SQL script in your Supabase Dashboard.", sErr);
-                    document.body.innerHTML = '<h1>Error: Database not ready</h1><p>Please go to Supabase Dashboard -> SQL Editor and run the provided script.</p>';
-                    return;
-                }
-
+                if (sErr) { console.error(sErr); document.body.innerHTML = '<h1>DB Error</h1>'; return; }
                 spots.forEach(s => { if (s.plate) layout[s.id] = s.plate; });
 
-                const { data: drivers, error: dErr } = await supabase.from('driver_profiles').select('*');
-                if (!dErr) {
-                    drivers.forEach(d => {
-                        localDrivers[d.plate] = { plate: d.plate, d1: d.d1, d2: d.d2 || undefined };
-                    });
-                }
+                const { data: drivers } = await supabase.from('driver_profiles').select('*');
+                if (drivers) drivers.forEach(d => { localDrivers[d.plate] = { plate: d.plate, d1: d.d1, d2: d.d2 || undefined }; });
 
                 supabase.channel('parking_changes')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_spots' }, payload => {
@@ -637,12 +608,8 @@
 
             async function moveVehicle(plate, targetSpot) {
                 const oldSpot = Object.keys(layout).find(k => layout[k] === plate);
-                if (oldSpot) {
-                    await supabase.from('parking_spots').update({ plate: null }).eq('id', oldSpot);
-                }
-                if (targetSpot) {
-                    await supabase.from('parking_spots').upsert({ id: targetSpot, plate: plate });
-                }
+                if (oldSpot) await supabase.from('parking_spots').update({ plate: null }).eq('id', oldSpot);
+                if (targetSpot) await supabase.from('parking_spots').upsert({ id: targetSpot, plate: plate });
             }
 
             function updatePool() {
@@ -653,8 +620,9 @@
                     const card = document.createElement('div');
                     card.className = 'vehicle-card' + (selectedVehicle?.plate === d.plate ? ' selected' : '');
                     card.innerHTML = `<div class="card-content"><div class="card-plate">${d.plate}</div><div class="card-drivers">${d.d1}${d.d2 ? ' / ' + d.d2 : ''}</div></div><button class="edit-btn">✏️</button>`;
-                    card.onclick = (e) => e.target.classList.contains('edit-btn') ? null : selectVehicle(d);
-                    card.querySelector('.edit-btn').onclick = async () => {
+                    card.onclick = (e) => { if (!e.target.classList.contains('edit-btn')) selectVehicle(d); };
+                    card.querySelector('.edit-btn').onclick = async (e) => {
+                        e.stopPropagation();
                         const n1 = prompt("Driver 1:", d.d1); if (!n1) return;
                         const n2 = prompt("Driver 2:", d.d2 || "");
                         await supabase.from('driver_profiles').upsert({ plate: d.plate, d1: n1, d2: n2 || null });
@@ -677,34 +645,23 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.save(); ctx.scale(2, 2); ctx.translate(view.x, view.y); ctx.scale(view.scale, view.scale);
                 ctx.fillStyle = "#64748b"; ctx.font = "800 22px Inter"; ctx.textAlign = "right"; ctx.fillText("⇠ ENTRANCE", 60, 80 + 4.5 * CELL_H);
+
                 Object.values(SPOTS).forEach(s => {
                     const { x, y, w, h, id, type, label } = s;
-
                     ctx.fillStyle = type === 'takasago' ? "rgba(249,115,22,0.08)" : (type === 'ev' ? "rgba(16,185,129,0.06)" : (type === 'blocked' ? "#f8fafc" : "#fff"));
                     if (hover === id) ctx.fillStyle = "rgba(37,99,235,0.1)";
                     ctx.fillRect(x, y, w, h);
-
                     ctx.strokeStyle = type === 'takasago' ? "#f97316" : (type === 'ev' ? "#10b981" : "#e2e8f0");
                     ctx.lineWidth = type === 'takasago' ? 2.5 : 1.5;
                     ctx.strokeRect(x, y, w, h);
 
                     if (type === 'blocked') {
-                        // Draw diagonal cross (X) for blocked cells
-                        ctx.strokeStyle = "#e2e8f0";
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(x, y); ctx.lineTo(x + w, y + h);
-                        ctx.moveTo(x + w, y); ctx.lineTo(x, y + h);
-                        ctx.stroke();
-
-                        if (label.trim()) {
-                            ctx.fillStyle = "#94a3b8"; ctx.font = "700 11px Inter"; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, y + h / 2 + 4);
-                        }
+                        ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke();
+                        if (label.trim()) { ctx.fillStyle = "#94a3b8"; ctx.font = "700 11px Inter"; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, y + h / 2 + 4); }
                     } else {
                         ctx.fillStyle = "#475569"; ctx.font = "700 14px Inter"; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, y + h / 2 + 5);
-                        if (type === 'takasago') {
-                            ctx.fillStyle = "#ea580c"; ctx.font = "800 8px Inter"; ctx.fillText("TAKASAGO", x + w / 2, y + h / 2 + 17);
-                        }
+                        if (type === 'takasago') { ctx.fillStyle = "#ea580c"; ctx.font = "800 8px Inter"; ctx.fillText("TAKASAGO", x + w / 2, y + h / 2 + 17); }
                     }
                     if (layout[id]) drawCar(x + 8, y + 8, w - 16, h - 16, localDrivers[layout[id]] || { plate: layout[id] });
                 });
@@ -717,150 +674,69 @@
                 ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.font = "500 9px Inter"; ctx.fillText((d.d1 || '').split(' ')[0], x + w / 2, y + h / 2 + 12); ctx.restore();
             }
 
-            // === INTERACTION ===
             function getWorldPos(clientX, clientY) {
                 const r = canvas.getBoundingClientRect();
-                const mx = clientX - r.left;
-                const my = clientY - r.top;
-                const wx = (mx - view.x) / view.scale;
-                const wy = (my - view.y) / view.scale;
-                return { mx, my, wx, wy };
+                return { wx: (clientX - r.left - view.x) / view.scale, wy: (clientY - r.top - view.y) / view.scale };
             }
 
             function findSpotAt(wx, wy) {
-                return Object.values(SPOTS).find(s =>
-                    wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h
-                );
+                return Object.values(SPOTS).find(s => wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h);
             }
-
-            // Mouse panning
-            canvas.addEventListener('mousemove', e => {
-                mouse = getWorldPos(e.clientX, e.clientY);
-                if (pan) {
-                    view.x += e.clientX - pan.x;
-                    view.y += e.clientY - pan.y;
-                    pan = { x: e.clientX, y: e.clientY };
-                } else {
-                    const found = findSpotAt(mouse.wx, mouse.wy);
-                    hover = found ? found.id : null;
-                }
-                render();
-            });
-
-            canvas.addEventListener('mousedown', e => {
-                pan = { x: e.clientX, y: e.clientY };
-                canvas.style.cursor = 'grabbing';
-            });
-
-            window.addEventListener('mouseup', (e) => {
-                if (pan) {
-                    const dx = Math.abs(e.clientX - pan.x);
-                    const dy = Math.abs(e.clientY - pan.y);
-                    if (dx < 5 && dy < 5) { // It was a click, not a pan
-                        handleTap(e.clientX, e.clientY);
-                    }
-                }
-                pan = null;
-                canvas.style.cursor = 'default';
-                render();
-            });
-
-            // Touch panning
-            let touchStartPos = null;
-            let isTouchPanning = false;
-
-            canvas.addEventListener('touchstart', e => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                touchStartPos = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-                isTouchPanning = false;
-            }, { passive: false });
-
-            canvas.addEventListener('touchmove', e => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                if (!touchStartPos) return;
-                const dx = touch.clientX - touchStartPos.x;
-                const dy = touch.clientY - touchStartPos.y;
-
-                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                    isTouchPanning = true;
-                    view.x += dx;
-                    view.y += dy;
-                    touchStartPos = { x: touch.clientX, y: touch.clientY, time: touchStartPos.time };
-                    render();
-                }
-            }, { passive: false });
-
-            canvas.addEventListener('touchend', e => {
-                e.preventDefault();
-                if (!isTouchPanning && touchStartPos && (Date.now() - touchStartPos.time < 300)) {
-                    // Tap detection
-                    const touch = e.changedTouches[0];
-                    handleTap(touch.clientX, touch.clientY);
-                }
-                touchStartPos = null;
-                isTouchPanning = false;
-            }, { passive: false });
 
             function handleTap(clientX, clientY) {
                 const p = getWorldPos(clientX, clientY);
                 const s = findSpotAt(p.wx, p.wy);
-
                 if (selectedVehicle) {
-                    if (s && s.type !== 'blocked') {
-                        moveVehicle(selectedVehicle.plate, s.id);
-                        selectedVehicle = null;
-                        selectionBanner.classList.remove('active');
-                    }
-                } else if (s && layout[s.id]) {
-                    selectVehicle(localDrivers[layout[s.id]]);
-                }
+                    if (s && s.type !== 'blocked') { moveVehicle(selectedVehicle.plate, s.id); selectedVehicle = null; selectionBanner.classList.remove('active'); }
+                } else if (s && layout[s.id]) { selectVehicle(localDrivers[layout[s.id]]); }
             }
+
+            // Mouse
+            canvas.addEventListener('mousedown', e => { pan = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; });
+            canvas.addEventListener('mousemove', e => {
+                if (pan) { view.x += e.clientX - pan.x; view.y += e.clientY - pan.y; pan = { x: e.clientX, y: e.clientY }; }
+                else { const p = getWorldPos(e.clientX, e.clientY); hover = findSpotAt(p.wx, p.wy)?.id || null; }
+                render();
+            });
+            window.addEventListener('mouseup', e => {
+                if (pan && Math.abs(e.clientX - pan.x) < 5 && Math.abs(e.clientY - pan.y) < 5) handleTap(e.clientX, e.clientY);
+                pan = null; canvas.style.cursor = 'default'; render();
+            });
+
+            // Touch
+            let touchStart = null, isPanning = false;
+            canvas.addEventListener('touchstart', e => { e.preventDefault(); const t = e.touches[0]; touchStart = { x: t.clientX, y: t.clientY, time: Date.now() }; isPanning = false; }, { passive: false });
+            canvas.addEventListener('touchmove', e => { e.preventDefault(); const t = e.touches[0]; if (!touchStart) return; const dx = t.clientX - touchStart.x, dy = t.clientY - touchStart.y; if (Math.abs(dx) > 5 || Math.abs(dy) > 5) { isPanning = true; view.x += dx; view.y += dy; touchStart = { x: t.clientX, y: t.clientY, time: touchStart.time }; render(); } }, { passive: false });
+            canvas.addEventListener('touchend', e => { e.preventDefault(); if (!isPanning && touchStart && Date.now() - touchStart.time < 300) handleTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY); touchStart = null; isPanning = false; }, { passive: false });
+
+            // UI
+            fabPool.addEventListener('click', () => sidebar.classList.add('open'));
+            closeSidebar.addEventListener('click', () => sidebar.classList.remove('open'));
+            document.getElementById('cancelSelection').addEventListener('click', () => { selectedVehicle = null; selectionBanner.classList.remove('active'); updatePool(); render(); });
 
             document.getElementById('zoomIn').onclick = () => { view.scale *= 1.2; render(); };
             document.getElementById('zoomOut').onclick = () => { view.scale /= 1.2; render(); };
             document.getElementById('viewReset').onclick = () => { view = isMobile ? { x: 50, y: 20, scale: 0.5 } : { x: 180, y: 20, scale: 0.8 }; render(); };
-            fabPool.onclick = () => sidebar.classList.add('open');
-            document.getElementById('closeSidebar').onclick = () => sidebar.classList.remove('open');
-            document.getElementById('cancelSelection').onclick = () => { selectedVehicle = null; selectionBanner.classList.remove('active'); updatePool(); render(); };
 
             document.getElementById('pdfBtn').onclick = () => {
-                // Save current view
                 const savedView = { ...view };
-
-                // Set view to show entire map (all spots fit)
-                view = { x: 30, y: 10, scale: 0.45 };
-                render();
-
-                // Generate PDF after render
+                view = { x: 30, y: 10, scale: 0.45 }; render();
                 setTimeout(() => {
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('l', 'mm', 'a4');
-
-                    // Title and timestamp
-                    pdf.setFontSize(16);
-                    pdf.setFont(undefined, 'bold');
-                    pdf.text('Living Hotel Kanzler - Parking Map', 14, 15);
-
-                    pdf.setFontSize(10);
-                    pdf.setFont(undefined, 'normal');
-                    const now = new Date();
-                    pdf.text(`Generated: ${now.toLocaleString('de-DE')}`, 280, 15, { align: 'right' });
-
-                    // Add map image (full width)
+                    pdf.setFontSize(16); pdf.setFont(undefined, 'bold'); pdf.text('Living Hotel Kanzler - Parking Map', 14, 15);
+                    pdf.setFontSize(10); pdf.setFont(undefined, 'normal'); pdf.text(`Generated: ${new Date().toLocaleString('de-DE')}`, 280, 15, { align: 'right' });
                     pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 10, 22, 277, 175);
-
-                    pdf.save(`Kanzler_Parking_${now.toISOString().split('T')[0]}.pdf`);
-
-                    // Restore original view
-                    view = savedView;
-                    render();
+                    pdf.save(`Kanzler_Parking_${new Date().toISOString().split('T')[0]}.pdf`);
+                    view = savedView; render();
                 }, 150);
             };
 
+            document.getElementById('resetBtn').onclick = () => { if (confirm('Reset all parking data?')) Object.keys(layout).forEach(k => supabase.from('parking_spots').update({ plate: null }).eq('id', k)); };
+
             buildSpots(); initSupabase();
             window.onresize = () => { isMobile = window.innerWidth <= 768; render(); };
+            if (isMobile) view = { x: 50, y: 20, scale: 0.5 };
             setInterval(render, 100);
         })();
     </script>
