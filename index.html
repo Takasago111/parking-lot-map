@@ -709,11 +709,37 @@
             document.getElementById('cancelSelection').onclick = () => { selectedVehicle = null; selectionBanner.classList.remove('active'); updatePool(); render(); };
 
             document.getElementById('pdfBtn').onclick = () => {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('l', 'mm', 'a4');
-                pdf.text('Parking Map Report', 14, 15);
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 14, 20, 260, 150);
-                pdf.save('Parking_Map.pdf');
+                // Save current view
+                const savedView = { ...view };
+
+                // Set view to show entire map (all spots fit)
+                view = { x: 30, y: 10, scale: 0.45 };
+                render();
+
+                // Generate PDF after render
+                setTimeout(() => {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('l', 'mm', 'a4');
+
+                    // Title and timestamp
+                    pdf.setFontSize(16);
+                    pdf.setFont(undefined, 'bold');
+                    pdf.text('Living Hotel Kanzler - Parking Map', 14, 15);
+
+                    pdf.setFontSize(10);
+                    pdf.setFont(undefined, 'normal');
+                    const now = new Date();
+                    pdf.text(`Generated: ${now.toLocaleString('de-DE')}`, 280, 15, { align: 'right' });
+
+                    // Add map image (full width)
+                    pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 10, 22, 277, 175);
+
+                    pdf.save(`Kanzler_Parking_${now.toISOString().split('T')[0]}.pdf`);
+
+                    // Restore original view
+                    view = savedView;
+                    render();
+                }, 150);
             };
 
             buildSpots(); initSupabase();
