@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --bg-main: #f8fafc;
@@ -45,7 +46,7 @@
             width: 100vw;
         }
 
-        /* ===== SIDEBAR (DESKTOP) ===== */
+        /* ===== SIDEBAR ===== */
         .sidebar {
             width: 380px;
             min-width: 380px;
@@ -223,9 +224,41 @@
             gap: 12px;
         }
 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
         .header h1 {
             font-size: 1.5rem;
             font-weight: 800;
+        }
+
+        /* PDF BUTTON */
+        .pdf-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pdf-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .pdf-btn span {
+            font-size: 1.1rem;
         }
 
         .legend {
@@ -320,7 +353,7 @@
             font-size: 1.2rem;
         }
 
-        /* ===== MOBILE FAB (Toggle Pool) ===== */
+        /* ===== MOBILE FAB ===== */
         .fab-pool {
             display: none;
             position: absolute;
@@ -436,16 +469,16 @@
             }
 
             .header h1 {
-                font-size: 1.1rem;
+                font-size: 1rem;
+            }
+
+            .pdf-btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
             }
 
             .legend {
-                padding: 8px 12px;
-                gap: 12px;
-            }
-
-            .legend-item {
-                font-size: 0.65rem;
+                display: none;
             }
 
             .viewport {
@@ -477,7 +510,7 @@
         <div class="loader"></div>
     </div>
 
-    <!-- SELECTION BANNER (for Mobile Tap-to-Place) -->
+    <!-- SELECTION BANNER -->
     <div id="selectionBanner" class="selection-banner">
         <span id="selectionText">Select a parking spot</span>
         <button id="cancelSelection" class="cancel-selection">Cancel</button>
@@ -502,10 +535,15 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN -->
         <main class="main">
             <header class="header">
-                <h1>Living Hotel Kanzler Parking</h1>
+                <div class="header-left">
+                    <h1>Living Hotel Kanzler Parking</h1>
+                    <button id="pdfBtn" class="pdf-btn">
+                        <span>🖨️</span> PDF Export
+                    </button>
+                </div>
                 <div class="legend">
                     <div class="legend-item"><span class="legend-dot takasago"></span> TAKASAGO (58-71)</div>
                     <div class="legend-item"><span class="legend-dot ev"></span> EV</div>
@@ -515,15 +553,11 @@
 
             <div class="viewport">
                 <canvas id="canvas"></canvas>
-
-                <!-- ZOOM CONTROLS -->
                 <div class="zoom-controls">
                     <button id="zoomIn" class="zoom-btn">+</button>
                     <button id="zoomOut" class="zoom-btn">−</button>
                     <button id="viewReset" class="zoom-btn home">🏠</button>
                 </div>
-
-                <!-- FAB for Mobile Pool Toggle -->
                 <button id="fabPool" class="fab-pool">🚗</button>
             </div>
         </main>
@@ -531,6 +565,8 @@
 
     <script>
         (function () {
+            const { jsPDF } = window.jspdf;
+
             // === CORE ELEMENTS ===
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
@@ -541,10 +577,11 @@
             const selectionBanner = document.getElementById('selectionBanner');
             const selectionText = document.getElementById('selectionText');
             const cancelSelection = document.getElementById('cancelSelection');
+            const pdfBtn = document.getElementById('pdfBtn');
 
             // === GUN.JS SYNC ===
-            const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
-            const db = gun.get('kanzler_parking_final_production_v7');
+            const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wallie.io/gun']);
+            const db = gun.get('kanzler_parking_v9_stable');
             const spotsDB = db.get('spots');
             const driversDB = db.get('drivers');
 
@@ -575,7 +612,7 @@
             let hover = null;
             let mouse = { x: 0, y: 0 };
             let pan = null;
-            let selectedVehicle = null; // For tap-to-place mode
+            let selectedVehicle = null;
             let isMobile = window.innerWidth <= 768;
 
             // === SPOTS REGISTRY ===
@@ -594,20 +631,17 @@
 
                 const sX = 80, sY = 80;
 
-                // Column C (Left)
                 [28, 27, 26, 25].forEach((n, i) => reg(String(n), sX, sY + i * CELL_H, CELL_W, CELL_H));
                 reg("HOTEL_PATH_1", sX, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
                 [24, 22, 20, 18, 16, 14].forEach((n, i) => reg(String(n), sX, sY + (5 + i) * CELL_H, CELL_W, CELL_H));
                 ["12/13", "10/11", "8/9", "6/7", "5/4"].forEach((id, i) => reg(id, sX, sY + (11 + i) * CELL_H, CELL_W, CELL_H));
 
-                // Column E (Middle)
                 const ex = sX + CELL_W + 40;
                 [42, 41, 40, 39].forEach((n, i) => reg(String(n), ex, sY + i * CELL_H, CELL_W, CELL_H));
                 reg("BLOCK_1", ex, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', " ");
                 [38, 37, 36].forEach((n, i) => reg(String(n), ex, sY + (5 + i) * CELL_H, CELL_W, CELL_H));
                 ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((id, i) => reg(id, ex, sY + (8 + i) * CELL_H, CELL_W, CELL_H));
 
-                // Column H/I (Takasago + Regular)
                 const hx = ex + CELL_W + 350, ix = hx + CELL_W;
                 ["E", "F", "G", "H"].forEach((c, i) => reg("T-" + c, ex + i * (hx - ex) / 3, sY - CELL_H, (hx - ex) / 3, CELL_H, 'blocked', " "));
                 reg("I-T", ix, sY - CELL_H, CELL_W, CELL_H, 'blocked', " ");
@@ -623,7 +657,6 @@
                     if (row[1]) reg(String(row[1]), ix, rY + r * CELL_H, CELL_W, CELL_H);
                 });
 
-                // Bottom row
                 const bY = sY + 18 * CELL_H;
                 reg("HOTEL_PATH_2", sX, bY, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
                 [85, 86, 87, 88].forEach((n, i) => reg(String(n), ex + i * CELL_W, bY, CELL_W, CELL_H));
@@ -683,7 +716,6 @@
                         <button class="edit-btn">✏️</button>
                     `;
 
-                    // Desktop: Drag
                     card.draggable = !isMobile;
                     card.addEventListener('dragstart', (e) => {
                         if (isMobile) return;
@@ -691,7 +723,6 @@
                         e.dataTransfer.setDragImage(new Image(), 0, 0);
                     });
 
-                    // Mobile: Tap to Select
                     card.addEventListener('click', (e) => {
                         if (e.target.classList.contains('edit-btn')) return;
                         selectVehicle(d);
@@ -745,17 +776,14 @@
                 ctx.translate(view.x, view.y);
                 ctx.scale(view.scale, view.scale);
 
-                // Entrance label
                 ctx.fillStyle = "#64748b";
                 ctx.font = "800 22px Inter, sans-serif";
                 ctx.textAlign = "right";
                 ctx.fillText("⇠ ENTRANCE / EXIT", 60, 80 + 4.5 * CELL_H);
 
-                // Draw spots
                 Object.values(SPOTS).forEach(s => {
                     const { x, y, w, h, id, type, label } = s;
 
-                    // Background
                     if (type === 'takasago') ctx.fillStyle = "rgba(249,115,22,0.08)";
                     else if (type === 'ev') ctx.fillStyle = "rgba(16,185,129,0.06)";
                     else if (type === 'blocked') ctx.fillStyle = "#f8fafc";
@@ -764,12 +792,10 @@
                     if (hover === id) ctx.fillStyle = "rgba(37,99,235,0.1)";
                     ctx.fillRect(x, y, w, h);
 
-                    // Border
                     ctx.strokeStyle = type === 'takasago' ? "#f97316" : (type === 'ev' ? "#10b981" : "#e2e8f0");
                     ctx.lineWidth = type === 'takasago' ? 2.5 : 1.5;
                     ctx.strokeRect(x, y, w, h);
 
-                    // Label
                     if (type === 'blocked') {
                         if (label.trim()) {
                             ctx.fillStyle = "#94a3b8";
@@ -789,7 +815,6 @@
                         }
                     }
 
-                    // Parked car
                     const plate = layout[id];
                     if (plate && (!drag || drag.data.plate !== plate)) {
                         drawCar(x + 8, y + 8, w - 16, h - 16, drivers[plate] || { plate }, false);
@@ -798,7 +823,6 @@
 
                 ctx.restore();
 
-                // Ghost car during drag
                 if (drag) {
                     ctx.save();
                     ctx.scale(2, 2);
@@ -824,6 +848,56 @@
                 ctx.restore();
             }
 
+            // === PDF EXPORT ===
+            function exportPDF() {
+                // Save current view state
+                const savedView = { ...view };
+                
+                // Reset to a good viewing position for PDF
+                view = { x: 50, y: 30, scale: 0.65 };
+                render();
+
+                // Give time for render
+                setTimeout(() => {
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    const pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    // Title
+                    pdf.setFontSize(18);
+                    pdf.setFont(undefined, 'bold');
+                    pdf.text('Living Hotel Kanzler - Parking Map', 14, 15);
+
+                    // Timestamp
+                    pdf.setFontSize(10);
+                    pdf.setFont(undefined, 'normal');
+                    const now = new Date();
+                    const timestamp = now.toLocaleString('de-DE', { 
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    pdf.text(`Generated: ${timestamp}`, pdfWidth - 14, 15, { align: 'right' });
+
+                    // Map image
+                    const imgWidth = pdfWidth - 28;
+                    const imgHeight = (canvas.height / canvas.width) * imgWidth;
+                    pdf.addImage(imgData, 'PNG', 14, 22, imgWidth, Math.min(imgHeight, pdfHeight - 32));
+
+                    // Download
+                    pdf.save(`Kanzler_Parking_${now.toISOString().split('T')[0]}.pdf`);
+
+                    // Restore view
+                    view = savedView;
+                    render();
+                }, 100);
+            }
+
             // === INTERACTION ===
             function getWorldPos(clientX, clientY) {
                 const r = canvas.getBoundingClientRect();
@@ -840,7 +914,6 @@
                 );
             }
 
-            // Mouse events (Desktop)
             canvas.addEventListener('mousemove', e => {
                 const p = getWorldPos(e.clientX, e.clientY);
                 mouse = { x: p.mx, y: p.my };
@@ -883,7 +956,7 @@
                 render();
             });
 
-            // Touch events (Mobile)
+            // Touch events
             let touchStartTime = 0;
             let touchStartPos = null;
             let isTouchPanning = false;
@@ -914,39 +987,28 @@
             canvas.addEventListener('touchend', e => {
                 e.preventDefault();
                 if (!isTouchPanning && Date.now() - touchStartTime < 300) {
-                    // This was a tap
                     const touch = e.changedTouches[0];
                     const p = getWorldPos(touch.clientX, touch.clientY);
                     const found = findSpotAt(p.wx, p.wy);
 
                     if (selectedVehicle) {
-                        // Place the selected vehicle
                         if (found && found.type !== 'blocked') {
                             moveVehicle(selectedVehicle.plate, found.id);
                             cancelSelectionMode();
                         }
                     } else if (found && layout[found.id]) {
-                        // Tap on a parked car - select it for moving
                         selectVehicle(drivers[layout[found.id]]);
                     }
                 }
                 isTouchPanning = false;
             }, { passive: false });
 
-            // === MOBILE UI ===
-            fabPool.addEventListener('click', () => {
-                sidebar.classList.add('open');
-            });
+            // === UI EVENTS ===
+            fabPool.addEventListener('click', () => sidebar.classList.add('open'));
+            closeSidebar.addEventListener('click', () => sidebar.clist('open'));
+            cancelSelection.addEventListener('click', cancelSelectionMode);
+            pdfBtn.addEventListener('click', exportPDF);
 
-            closeSidebar.addEventListener('click', () => {
-                sidebar.classList.remove('open');
-            });
-
-            cancelSelection.addEventListener('click', () => {
-                cancelSelectionMode();
-            });
-
-            // === ZOOM CONTROLS ===
             document.getElementById('zoomIn').addEventListener('click', () => {
                 view.scale *= 1.25;
                 render();
@@ -962,14 +1024,12 @@
                 render();
             });
 
-            // === RESET ===
             document.getElementById('resetBtn').addEventListener('click', () => {
                 if (confirm('Reset all parking data?')) {
                     spotsDB.map().once((v, k) => spotsDB.get(k).put(null));
                 }
             });
 
-            // === RESIZE ===
             window.addEventListener('resize', () => {
                 isMobile = window.innerWidth <= 768;
                 render();
@@ -978,9 +1038,7 @@
             // === INIT ===
             buildSpots();
             initSync();
-            if (isMobile) {
-                view = { x: 50, y: 20, scale: 0.5 };
-            }
+            if (isMobile) view = { x: 50, y: 20, scale: 0.5 };
             setInterval(render, 50);
         })();
     </script>
