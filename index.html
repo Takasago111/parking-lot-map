@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Living Hotel Kanzler Parking Map</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +25,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -32,16 +33,19 @@
             background: var(--bg-main);
             color: var(--text-main);
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
+            touch-action: none;
         }
 
         .app {
             display: flex;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
         }
 
-        /* ===== SIDEBAR ===== */
+        /* ===== SIDEBAR (DESKTOP) ===== */
         .sidebar {
             width: 380px;
             min-width: 380px;
@@ -55,12 +59,25 @@
         .sidebar-header {
             padding: 28px 24px;
             border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .sidebar-header h2 {
             font-size: 1.4rem;
             font-weight: 800;
-            margin-bottom: 8px;
+        }
+
+        .close-sidebar {
+            display: none;
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         .sync-badge {
@@ -94,7 +111,6 @@
             }
         }
 
-        /* Vehicle Pool - FIXED LAYOUT */
         .pool {
             flex: 1;
             overflow-y: auto;
@@ -112,24 +128,24 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: grab;
+            cursor: pointer;
             transition: all 0.2s;
+            user-select: none;
         }
 
-        .vehicle-card:hover {
+        .vehicle-card:hover,
+        .vehicle-card.selected {
             border-color: var(--accent-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+            background: rgba(37, 99, 235, 0.05);
         }
 
-        .vehicle-card:active {
-            cursor: grabbing;
+        .vehicle-card.selected {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
         }
 
         .card-content {
             flex: 1;
             min-width: 0;
-            /* Important for text truncation */
         }
 
         .card-plate {
@@ -146,7 +162,6 @@
             font-weight: 600;
             color: #334155;
             line-height: 1.35;
-            /* Allow wrapping but prevent overflow */
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
@@ -189,10 +204,6 @@
             transition: 0.2s;
         }
 
-        .reset-btn:hover {
-            background: #fee2e2;
-        }
-
         /* ===== MAIN CONTENT ===== */
         .main {
             flex: 1;
@@ -200,6 +211,7 @@
             flex-direction: column;
             padding: 28px 40px;
             background: #f1f5f9;
+            position: relative;
         }
 
         .header {
@@ -207,6 +219,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .header h1 {
@@ -221,6 +235,7 @@
             padding: 10px 20px;
             border-radius: 12px;
             border: 1px solid var(--border-light);
+            flex-wrap: wrap;
         }
 
         .legend-item {
@@ -266,46 +281,93 @@
             left: 0;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
 
-        /* ===== ZOOM CONTROLS - MUST BE VISIBLE ===== */
+        /* ===== CONTROLS ===== */
         .zoom-controls {
             position: absolute;
-            bottom: 32px;
-            right: 32px;
+            bottom: 20px;
+            right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             z-index: 9999;
         }
 
         .zoom-btn {
-            width: 56px;
-            height: 56px;
+            width: 52px;
+            height: 52px;
             background: #ffffff;
             border: 2px solid #cbd5e1;
-            border-radius: 16px;
-            font-size: 1.8rem;
+            border-radius: 14px;
+            font-size: 1.6rem;
             font-weight: 500;
             color: #334155;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
             transition: all 0.2s;
         }
 
-        .zoom-btn:hover {
-            background: var(--accent-blue);
-            color: white;
-            border-color: var(--accent-blue);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
+        .zoom-btn:active {
+            transform: scale(0.95);
         }
 
         .zoom-btn.home {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+        }
+
+        /* ===== MOBILE FAB (Toggle Pool) ===== */
+        .fab-pool {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            z-index: 9999;
+            cursor: pointer;
+        }
+
+        /* ===== SELECTION BANNER ===== */
+        .selection-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--accent-blue);
+            color: white;
+            padding: 16px 20px;
+            z-index: 10000;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .selection-banner.active {
+            display: block;
+        }
+
+        .cancel-selection {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-left: 12px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         /* ===== BOOT SCREEN ===== */
@@ -313,7 +375,7 @@
             position: fixed;
             inset: 0;
             background: white;
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -333,6 +395,80 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                min-width: 100%;
+                z-index: 10001;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .close-sidebar {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main {
+                padding: 16px;
+                height: 100vh;
+                height: 100dvh;
+            }
+
+            .header {
+                margin-bottom: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .legend {
+                padding: 8px 12px;
+                gap: 12px;
+            }
+
+            .legend-item {
+                font-size: 0.65rem;
+            }
+
+            .viewport {
+                border-radius: 16px;
+            }
+
+            .fab-pool {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .zoom-controls {
+                bottom: 90px;
+                right: 16px;
+            }
+
+            .zoom-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+            }
+        }
     </style>
 </head>
 
@@ -341,15 +477,24 @@
         <div class="loader"></div>
     </div>
 
+    <!-- SELECTION BANNER (for Mobile Tap-to-Place) -->
+    <div id="selectionBanner" class="selection-banner">
+        <span id="selectionText">Select a parking spot</span>
+        <button id="cancelSelection" class="cancel-selection">Cancel</button>
+    </div>
+
     <div class="app">
         <!-- SIDEBAR -->
-        <aside class="sidebar">
+        <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h2>Vehicles</h2>
-                <div class="sync-badge">
-                    <span class="sync-dot"></span>
-                    <span>Online</span>
+                <div>
+                    <h2>Vehicles</h2>
+                    <div class="sync-badge">
+                        <span class="sync-dot"></span>
+                        <span>Online</span>
+                    </div>
                 </div>
+                <button id="closeSidebar" class="close-sidebar">✕</button>
             </div>
             <div id="pool" class="pool"></div>
             <div class="sidebar-footer">
@@ -363,7 +508,7 @@
                 <h1>Living Hotel Kanzler Parking</h1>
                 <div class="legend">
                     <div class="legend-item"><span class="legend-dot takasago"></span> TAKASAGO (58-71)</div>
-                    <div class="legend-item"><span class="legend-dot ev"></span> EV CHARGE</div>
+                    <div class="legend-item"><span class="legend-dot ev"></span> EV</div>
                     <div class="legend-item"><span class="legend-dot blocked"></span> BLOCKED</div>
                 </div>
             </header>
@@ -371,12 +516,15 @@
             <div class="viewport">
                 <canvas id="canvas"></canvas>
 
-                <!-- ZOOM CONTROLS - ALWAYS VISIBLE -->
+                <!-- ZOOM CONTROLS -->
                 <div class="zoom-controls">
                     <button id="zoomIn" class="zoom-btn">+</button>
                     <button id="zoomOut" class="zoom-btn">−</button>
                     <button id="viewReset" class="zoom-btn home">🏠</button>
                 </div>
+
+                <!-- FAB for Mobile Pool Toggle -->
+                <button id="fabPool" class="fab-pool">🚗</button>
             </div>
         </main>
     </div>
@@ -387,6 +535,12 @@
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             const poolEl = document.getElementById('pool');
+            const sidebar = document.getElementById('sidebar');
+            const fabPool = document.getElementById('fabPool');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const selectionBanner = document.getElementById('selectionBanner');
+            const selectionText = document.getElementById('selectionText');
+            const cancelSelection = document.getElementById('cancelSelection');
 
             // === GUN.JS SYNC ===
             const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
@@ -421,6 +575,8 @@
             let hover = null;
             let mouse = { x: 0, y: 0 };
             let pan = null;
+            let selectedVehicle = null; // For tap-to-place mode
+            let isMobile = window.innerWidth <= 768;
 
             // === SPOTS REGISTRY ===
             const SPOTS = {};
@@ -499,11 +655,9 @@
             }
 
             function moveVehicle(plate, targetSpot) {
-                // Remove from old spot
                 Object.entries(layout).forEach(([sid, p]) => {
                     if (p === plate) spotsDB.get(sid).put(null);
                 });
-                // Add to new spot
                 if (targetSpot) spotsDB.get(targetSpot).put(plate);
             }
 
@@ -517,7 +671,9 @@
 
                     const card = document.createElement('div');
                     card.className = 'vehicle-card';
-                    card.draggable = true;
+                    if (selectedVehicle && selectedVehicle.plate === d.plate) {
+                        card.classList.add('selected');
+                    }
 
                     card.innerHTML = `
                         <div class="card-content">
@@ -527,9 +683,18 @@
                         <button class="edit-btn">✏️</button>
                     `;
 
+                    // Desktop: Drag
+                    card.draggable = !isMobile;
                     card.addEventListener('dragstart', (e) => {
+                        if (isMobile) return;
                         drag = { origin: 'pool', data: d };
                         e.dataTransfer.setDragImage(new Image(), 0, 0);
+                    });
+
+                    // Mobile: Tap to Select
+                    card.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('edit-btn')) return;
+                        selectVehicle(d);
                     });
 
                     const editBtn = card.querySelector('.edit-btn');
@@ -549,14 +714,28 @@
                 });
             }
 
+            function selectVehicle(d) {
+                selectedVehicle = d;
+                selectionText.textContent = `Placing: ${d.plate} - Tap a spot`;
+                selectionBanner.classList.add('active');
+                sidebar.classList.remove('open');
+                updatePool();
+                render();
+            }
+
+            function cancelSelectionMode() {
+                selectedVehicle = null;
+                selectionBanner.classList.remove('active');
+                updatePool();
+                render();
+            }
+
             // === RENDER ===
             function render() {
-                // Use viewport size directly - canvas is absolutely positioned so it won't affect parent
                 const viewport = canvas.parentElement;
                 const w = viewport.clientWidth;
                 const h = viewport.clientHeight;
 
-                // Only update canvas internal resolution (not style)
                 canvas.width = w * 2;
                 canvas.height = h * 2;
 
@@ -646,17 +825,24 @@
             }
 
             // === INTERACTION ===
-            function getWorldPos(e) {
+            function getWorldPos(clientX, clientY) {
                 const r = canvas.getBoundingClientRect();
-                const mx = e.clientX - r.left;
-                const my = e.clientY - r.top;
+                const mx = clientX - r.left;
+                const my = clientY - r.top;
                 const wx = (mx - view.x) / view.scale;
                 const wy = (my - view.y) / view.scale;
                 return { mx, my, wx, wy };
             }
 
+            function findSpotAt(wx, wy) {
+                return Object.values(SPOTS).find(s =>
+                    wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h
+                );
+            }
+
+            // Mouse events (Desktop)
             canvas.addEventListener('mousemove', e => {
-                const p = getWorldPos(e);
+                const p = getWorldPos(e.clientX, e.clientY);
                 mouse = { x: p.mx, y: p.my };
 
                 if (pan) {
@@ -664,19 +850,15 @@
                     view.y += e.clientY - pan.y;
                     pan = { x: e.clientX, y: e.clientY };
                 } else {
-                    const found = Object.values(SPOTS).find(s =>
-                        p.wx >= s.x && p.wx <= s.x + s.w && p.wy >= s.y && p.wy <= s.y + s.h
-                    );
+                    const found = findSpotAt(p.wx, p.wy);
                     hover = found ? found.id : null;
                 }
                 render();
             });
 
             canvas.addEventListener('mousedown', e => {
-                const p = getWorldPos(e);
-                const found = Object.values(SPOTS).find(s =>
-                    p.wx >= s.x && p.wx <= s.x + s.w && p.wy >= s.y && p.wy <= s.y + s.h
-                );
+                const p = getWorldPos(e.clientX, e.clientY);
+                const found = findSpotAt(p.wx, p.wy);
 
                 if (found && layout[found.id]) {
                     drag = { origin: 'canvas', data: drivers[layout[found.id]] };
@@ -701,6 +883,69 @@
                 render();
             });
 
+            // Touch events (Mobile)
+            let touchStartTime = 0;
+            let touchStartPos = null;
+            let isTouchPanning = false;
+
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                touchStartTime = Date.now();
+                touchStartPos = { x: touch.clientX, y: touch.clientY };
+                isTouchPanning = false;
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', e => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - touchStartPos.x;
+                const dy = touch.clientY - touchStartPos.y;
+
+                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                    isTouchPanning = true;
+                    view.x += touch.clientX - touchStartPos.x;
+                    view.y += touch.clientY - touchStartPos.y;
+                    touchStartPos = { x: touch.clientX, y: touch.clientY };
+                    render();
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', e => {
+                e.preventDefault();
+                if (!isTouchPanning && Date.now() - touchStartTime < 300) {
+                    // This was a tap
+                    const touch = e.changedTouches[0];
+                    const p = getWorldPos(touch.clientX, touch.clientY);
+                    const found = findSpotAt(p.wx, p.wy);
+
+                    if (selectedVehicle) {
+                        // Place the selected vehicle
+                        if (found && found.type !== 'blocked') {
+                            moveVehicle(selectedVehicle.plate, found.id);
+                            cancelSelectionMode();
+                        }
+                    } else if (found && layout[found.id]) {
+                        // Tap on a parked car - select it for moving
+                        selectVehicle(drivers[layout[found.id]]);
+                    }
+                }
+                isTouchPanning = false;
+            }, { passive: false });
+
+            // === MOBILE UI ===
+            fabPool.addEventListener('click', () => {
+                sidebar.classList.add('open');
+            });
+
+            closeSidebar.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+
+            cancelSelection.addEventListener('click', () => {
+                cancelSelectionMode();
+            });
+
             // === ZOOM CONTROLS ===
             document.getElementById('zoomIn').addEventListener('click', () => {
                 view.scale *= 1.25;
@@ -713,7 +958,7 @@
             });
 
             document.getElementById('viewReset').addEventListener('click', () => {
-                view = { x: 180, y: 20, scale: 0.8 };
+                view = { x: isMobile ? 50 : 180, y: 20, scale: isMobile ? 0.5 : 0.8 };
                 render();
             });
 
@@ -724,10 +969,18 @@
                 }
             });
 
+            // === RESIZE ===
+            window.addEventListener('resize', () => {
+                isMobile = window.innerWidth <= 768;
+                render();
+            });
+
             // === INIT ===
             buildSpots();
             initSync();
-            window.addEventListener('resize', render);
+            if (isMobile) {
+                view = { x: 50, y: 20, scale: 0.5 };
+            }
             setInterval(render, 50);
         })();
     </script>
