@@ -691,15 +691,106 @@
                 ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.font = "500 9px Inter"; ctx.fillText((d.d1 || '').split(' ')[0], x + w / 2, y + h / 2 + 12); ctx.restore();
             }
 
-            canvas.onclick = (e) => {
+            // === INTERACTION ===
+            function getWorldPos(clientX, clientY) {
                 const r = canvas.getBoundingClientRect();
-                const wx = (e.clientX - r.left - view.x) / view.scale;
-                const wy = (e.clientY - r.top - view.y) / view.scale;
-                const s = Object.values(SPOTS).find(s => wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h);
+                const mx = clientX - r.left;
+                const my = clientY - r.top;
+                const wx = (mx - view.x) / view.scale;
+                const wy = (my - view.y) / view.scale;
+                return { mx, my, wx, wy };
+            }
+
+            function findSpotAt(wx, wy) {
+                return Object.values(SPOTS).find(s =>
+                    wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h
+                );
+            }
+
+            // Mouse panning
+            canvas.addEventListener('mousemove', e => {
+                mouse = getWorldPos(e.clientX, e.clientY);
+                if (pan) {
+                    view.x += e.clientX - pan.x;
+                    view.y += e.clientY - pan.y;
+                    pan = { x: e.clientX, y: e.clientY };
+                } else {
+                    const found = findSpotAt(mouse.wx, mouse.wy);
+                    hover = found ? found.id : null;
+                }
+                render();
+            });
+
+            canvas.addEventListener('mousedown', e => {
+                pan = { x: e.clientX, y: e.clientY };
+                canvas.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (pan) {
+                    const dx = Math.abs(e.clientX - pan.x);
+                    const dy = Math.abs(e.clientY - pan.y);
+                    if (dx < 5 && dy < 5) { // It was a click, not a pan
+                        handleTap(e.clientX, e.clientY);
+                    }
+                }
+                pan = null;
+                canvas.style.cursor = 'default';
+                render();
+            });
+
+            // Touch panning
+            let touchStartPos = null;
+            let isTouchPanning = false;
+
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                touchStartPos = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+                isTouchPanning = false;
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', e => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                if (!touchStartPos) return;
+                const dx = touch.clientX - touchStartPos.x;
+                const dy = touch.clientY - touchStartPos.y;
+
+                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                    isTouchPanning = true;
+                    view.x += dx;
+                    view.y += dy;
+                    touchStartPos = { x: touch.clientX, y: touch.clientY, time: touchStartPos.time };
+                    render();
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', e => {
+                e.preventDefault();
+                if (!isTouchPanning && touchStartPos && (Date.now() - touchStartPos.time < 300)) {
+                    // Tap detection
+                    const touch = e.changedTouches[0];
+                    handleTap(touch.clientX, touch.clientY);
+                }
+                touchStartPos = null;
+                isTouchPanning = false;
+            }, { passive: false });
+
+            function handleTap(clientX, clientY) {
+                const p = getWorldPos(clientX, clientY);
+                const s = findSpotAt(p.wx, p.wy);
+
                 if (selectedVehicle) {
-                    if (s && s.type !== 'blocked') { moveVehicle(selectedVehicle.plate, s.id); selectedVehicle = null; selectionBanner.classList.remove('active'); }
-                } else if (s && layout[s.id]) { selectVehicle(localDrivers[layout[s.id]]); }
-            };
+                    if (s && s.type !== 'blocked') {
+                        moveVehicle(selectedVehicle.plate, s.id);
+                        selectedVehicle = null;
+                        selectionBanner.classList.remove('active');
+                    }
+                } else if (s && layout[s.id]) {
+                    selectVehicle(localDrivers[layout[s.id]]);
+                }
+            }
 
             document.getElementById('zoomIn').onclick = () => { view.scale *= 1.2; render(); };
             document.getElementById('zoomOut').onclick = () => { view.scale /= 1.2; render(); };
