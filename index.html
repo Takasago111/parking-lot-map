@@ -8,7 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
@@ -235,7 +237,6 @@
             font-weight: 800;
         }
 
-        /* PDF BUTTON */
         .pdf-btn {
             display: flex;
             align-items: center;
@@ -255,10 +256,6 @@
             background: var(--accent-blue);
             color: white;
             border-color: var(--accent-blue);
-        }
-
-        .pdf-btn span {
-            font-size: 1.1rem;
         }
 
         .legend {
@@ -345,90 +342,6 @@
             transition: all 0.2s;
         }
 
-        .zoom-btn:active {
-            transform: scale(0.95);
-        }
-
-        .zoom-btn.home {
-            font-size: 1.2rem;
-        }
-
-        /* ===== MOBILE FAB ===== */
-        .fab-pool {
-            display: none;
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 60px;
-            height: 60px;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-            z-index: 9999;
-            cursor: pointer;
-        }
-
-        /* ===== SELECTION BANNER ===== */
-        .selection-banner {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--accent-blue);
-            color: white;
-            padding: 16px 20px;
-            z-index: 10000;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .selection-banner.active {
-            display: block;
-        }
-
-        .cancel-selection {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-left: 12px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        /* ===== BOOT SCREEN ===== */
-        #boot {
-            position: fixed;
-            inset: 0;
-            background: white;
-            z-index: 99999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .loader {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f1f5f9;
-            border-top-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         /* ===== MOBILE RESPONSIVE ===== */
         @media (max-width: 768px) {
             .app {
@@ -460,29 +373,15 @@
 
             .main {
                 padding: 16px;
-                height: 100vh;
                 height: 100dvh;
-            }
-
-            .header {
-                margin-bottom: 12px;
             }
 
             .header h1 {
                 font-size: 1rem;
             }
 
-            .pdf-btn {
-                padding: 8px 12px;
-                font-size: 0.7rem;
-            }
-
             .legend {
                 display: none;
-            }
-
-            .viewport {
-                border-radius: 16px;
             }
 
             .fab-pool {
@@ -495,11 +394,73 @@
                 bottom: 90px;
                 right: 16px;
             }
+        }
 
-            .zoom-btn {
-                width: 48px;
-                height: 48px;
-                font-size: 1.4rem;
+        .fab-pool {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            z-index: 9999;
+        }
+
+        .selection-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--accent-blue);
+            color: white;
+            padding: 16px 20px;
+            z-index: 10000;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .selection-banner.active {
+            display: block;
+        }
+
+        .cancel-selection {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-left: 12px;
+        }
+
+        #boot {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f1f5f9;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
     </style>
@@ -510,22 +471,17 @@
         <div class="loader"></div>
     </div>
 
-    <!-- SELECTION BANNER -->
     <div id="selectionBanner" class="selection-banner">
         <span id="selectionText">Select a parking spot</span>
         <button id="cancelSelection" class="cancel-selection">Cancel</button>
     </div>
 
     <div class="app">
-        <!-- SIDEBAR -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <div>
                     <h2>Vehicles</h2>
-                    <div class="sync-badge">
-                        <span class="sync-dot"></span>
-                        <span>Online</span>
-                    </div>
+                    <div class="sync-badge"><span class="sync-dot"></span><span>Sync Active</span></div>
                 </div>
                 <button id="closeSidebar" class="close-sidebar">✕</button>
             </div>
@@ -535,22 +491,18 @@
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="main">
             <header class="header">
                 <div class="header-left">
-                    <h1>Living Hotel Kanzler Parking</h1>
-                    <button id="pdfBtn" class="pdf-btn">
-                        <span>🖨️</span> PDF Export
-                    </button>
+                    <h1>Kanzler Parking (SQL)</h1>
+                    <button id="pdfBtn" class="pdf-btn"><span>🖨️</span> PDF Report</button>
                 </div>
                 <div class="legend">
-                    <div class="legend-item"><span class="legend-dot takasago"></span> TAKASAGO (58-71)</div>
+                    <div class="legend-item"><span class="legend-dot takasago"></span> TAKASAGO</div>
                     <div class="legend-item"><span class="legend-dot ev"></span> EV</div>
                     <div class="legend-item"><span class="legend-dot blocked"></span> BLOCKED</div>
                 </div>
             </header>
-
             <div class="viewport">
                 <canvas id="canvas"></canvas>
                 <div class="zoom-controls">
@@ -565,27 +517,18 @@
 
     <script>
         (function () {
-            const { jsPDF } = window.jspdf;
+            const SUPABASE_URL = "https://ifzhdqhxelqbwfajjfke.supabase.co";
+            const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmemhkcWh4ZWxxYndmYWpqZmtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NzI1MTUsImV4cCI6MjA4NTI0ODUxNX0.0AzMdL-s901vdZUkq1vkg3fbvPpMZwIUW9ZAtCQX9Ds";
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            // === CORE ELEMENTS ===
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             const poolEl = document.getElementById('pool');
             const sidebar = document.getElementById('sidebar');
             const fabPool = document.getElementById('fabPool');
-            const closeSidebar = document.getElementById('closeSidebar');
             const selectionBanner = document.getElementById('selectionBanner');
             const selectionText = document.getElementById('selectionText');
-            const cancelSelection = document.getElementById('cancelSelection');
-            const pdfBtn = document.getElementById('pdfBtn');
 
-            // === GUN.JS SYNC ===
-            const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wallie.io/gun']);
-            const db = gun.get('kanzler_parking_v9_stable');
-            const spotsDB = db.get('spots');
-            const driversDB = db.get('drivers');
-
-            // === DRIVER DATA ===
             const DRIVERS = {
                 "M-AF 1576": { plate: "M-AF 1576", d1: "Takehiro Nagaoka", d2: "Kei Suzuki" },
                 "M-AF 1574": { plate: "M-AF 1574", d1: "Takaaki Kawabe", d2: "Mayuko Takenaka" },
@@ -604,9 +547,8 @@
                 "M-AF 1450": { plate: "M-AF 1450", d1: "Bruno Brito" }
             };
 
-            // === STATE ===
             let layout = {};
-            let drivers = JSON.parse(JSON.stringify(DRIVERS));
+            let localDrivers = JSON.parse(JSON.stringify(DRIVERS));
             let view = { x: 180, y: 20, scale: 0.8 };
             let drag = null;
             let hover = null;
@@ -615,7 +557,6 @@
             let selectedVehicle = null;
             let isMobile = window.innerWidth <= 768;
 
-            // === SPOTS REGISTRY ===
             const SPOTS = {};
             const CELL_W = 120, CELL_H = 50;
 
@@ -628,418 +569,156 @@
                     else if (!String(id).match(/^\d+/)) t = 'blocked';
                     SPOTS[id] = { id, x, y, w, h, type: t, label: label || id };
                 };
-
                 const sX = 80, sY = 80;
-
                 [28, 27, 26, 25].forEach((n, i) => reg(String(n), sX, sY + i * CELL_H, CELL_W, CELL_H));
-                reg("HOTEL_PATH_1", sX, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
+                reg("HP1", sX, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
                 [24, 22, 20, 18, 16, 14].forEach((n, i) => reg(String(n), sX, sY + (5 + i) * CELL_H, CELL_W, CELL_H));
-                ["12/13", "10/11", "8/9", "6/7", "5/4"].forEach((id, i) => reg(id, sX, sY + (11 + i) * CELL_H, CELL_W, CELL_H));
+                ["12/13", "10/11", "8/9", "6/7", "5/4"].forEach((n, i) => reg(n, sX, sY + (11 + i) * CELL_H, CELL_W, CELL_H));
 
                 const ex = sX + CELL_W + 40;
                 [42, 41, 40, 39].forEach((n, i) => reg(String(n), ex, sY + i * CELL_H, CELL_W, CELL_H));
-                reg("BLOCK_1", ex, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', " ");
+                reg("B1", ex, sY + 4 * CELL_H, CELL_W, CELL_H, 'blocked', " ");
                 [38, 37, 36].forEach((n, i) => reg(String(n), ex, sY + (5 + i) * CELL_H, CELL_W, CELL_H));
-                ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((id, i) => reg(id, ex, sY + (8 + i) * CELL_H, CELL_W, CELL_H));
+                ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((n, i) => reg(n, ex, sY + (8 + i) * CELL_H, CELL_W, CELL_H));
 
                 const hx = ex + CELL_W + 350, ix = hx + CELL_W;
-                ["E", "F", "G", "H"].forEach((c, i) => reg("T-" + c, ex + i * (hx - ex) / 3, sY - CELL_H, (hx - ex) / 3, CELL_H, 'blocked', " "));
-                reg("I-T", ix, sY - CELL_H, CELL_W, CELL_H, 'blocked', " ");
                 [54, 55, 56, 57].forEach((n, i) => reg(String(n), ix, sY + i * CELL_H, CELL_W, CELL_H));
-
-                const rY = sY + 4 * CELL_H;
-                const grid = [
-                    [58, 59], [60, 61], [62, 63], [64, 65], [66, 67], [68, 69], [70, 71],
-                    [72, 73], [74, 75], [76, 77], [78, 79], [80, "81 Res."], ["82 Bld.", "83 Res."]
-                ];
-                grid.forEach((row, r) => {
-                    if (row[0]) reg(String(row[0]), hx, rY + r * CELL_H, CELL_W, CELL_H);
-                    if (row[1]) reg(String(row[1]), ix, rY + r * CELL_H, CELL_W, CELL_H);
-                });
-
-                const bY = sY + 18 * CELL_H;
-                reg("HOTEL_PATH_2", sX, bY, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
-                [85, 86, 87, 88].forEach((n, i) => reg(String(n), ex + i * CELL_W, bY, CELL_W, CELL_H));
+                const gridY = sY + 4 * CELL_H;
+                [[58, 59], [60, 61], [62, 63], [64, 65], [66, 67], [68, 69], [70, 71], [72, 73], [74, 75], [76, 77], [78, 79], [80, "81 Res."], ["82 Bld.", "83 Res."]]
+                    .forEach((row, r) => {
+                        if (row[0]) reg(String(row[0]), hx, gridY + r * CELL_H, CELL_W, CELL_H);
+                        if (row[1]) reg(String(row[1]), ix, gridY + r * CELL_H, CELL_W, CELL_H);
+                    });
+                reg("HP2", sX, sY + 18 * CELL_H, CELL_W, CELL_H, 'blocked', "HOTEL PATH");
+                [85, 86, 87, 88].forEach((n, i) => reg(String(n), ex + i * CELL_W, sY + 18 * CELL_H, CELL_W, CELL_H));
             }
 
-            // === SYNC ===
-            function initSync() {
-                updatePool();
-                render();
+            async function initSupabase() {
+                const { data: spots, error: sErr } = await supabase.from('parking_spots').select('*');
+                if (sErr) {
+                    console.error("Database table error. Please run the SQL script in your Supabase Dashboard.", sErr);
+                    document.body.innerHTML = '<h1>Error: Database not ready</h1><p>Please go to Supabase Dashboard -> SQL Editor and run the provided script.</p>';
+                    return;
+                }
 
-                spotsDB.map().on((plate, id) => {
-                    if (plate) layout[id] = plate;
-                    else delete layout[id];
-                    updatePool();
-                    render();
-                });
+                spots.forEach(s => { if (s.plate) layout[s.id] = s.plate; });
 
-                driversDB.map().on((json, plate) => {
-                    if (json) {
-                        try { drivers[plate] = JSON.parse(json); } catch (e) { }
-                    }
-                    updatePool();
-                    render();
-                });
+                const { data: drivers, error: dErr } = await supabase.from('driver_profiles').select('*');
+                if (!dErr) {
+                    drivers.forEach(d => {
+                        localDrivers[d.plate] = { plate: d.plate, d1: d.d1, d2: d.d2 || undefined };
+                    });
+                }
 
-                setTimeout(() => {
-                    document.getElementById('boot').style.display = 'none';
-                }, 800);
+                supabase.channel('parking_changes')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_spots' }, payload => {
+                        if (payload.eventType === 'DELETE') delete layout[payload.old.id];
+                        else if (payload.new.plate) layout[payload.new.id] = payload.new.plate;
+                        else delete layout[payload.new.id];
+                        updatePool(); render();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'driver_profiles' }, payload => {
+                        localDrivers[payload.new.plate] = { plate: payload.new.plate, d1: payload.new.d1, d2: payload.new.d2 || undefined };
+                        updatePool(); render();
+                    })
+                    .subscribe();
+
+                document.getElementById('boot').style.display = 'none';
+                updatePool(); render();
             }
 
-            function moveVehicle(plate, targetSpot) {
-                Object.entries(layout).forEach(([sid, p]) => {
-                    if (p === plate) spotsDB.get(sid).put(null);
-                });
-                if (targetSpot) spotsDB.get(targetSpot).put(plate);
+            async function moveVehicle(plate, targetSpot) {
+                const oldSpot = Object.keys(layout).find(k => layout[k] === plate);
+                if (oldSpot) {
+                    await supabase.from('parking_spots').update({ plate: null }).eq('id', oldSpot);
+                }
+                if (targetSpot) {
+                    await supabase.from('parking_spots').upsert({ id: targetSpot, plate: plate });
+                }
             }
 
-            // === UI UPDATE ===
             function updatePool() {
                 poolEl.innerHTML = '';
                 const parked = Object.values(layout);
-
-                Object.values(drivers).forEach(d => {
+                Object.values(localDrivers).forEach(d => {
                     if (parked.includes(d.plate)) return;
-
                     const card = document.createElement('div');
-                    card.className = 'vehicle-card';
-                    if (selectedVehicle && selectedVehicle.plate === d.plate) {
-                        card.classList.add('selected');
-                    }
-
-                    card.innerHTML = `
-                        <div class="card-content">
-                            <div class="card-plate">${d.plate}</div>
-                            <div class="card-drivers">${d.d1}${d.d2 ? ' / ' + d.d2 : ''}</div>
-                        </div>
-                        <button class="edit-btn">✏️</button>
-                    `;
-
-                    card.draggable = !isMobile;
-                    card.addEventListener('dragstart', (e) => {
-                        if (isMobile) return;
-                        drag = { origin: 'pool', data: d };
-                        e.dataTransfer.setDragImage(new Image(), 0, 0);
-                    });
-
-                    card.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('edit-btn')) return;
-                        selectVehicle(d);
-                    });
-
-                    const editBtn = card.querySelector('.edit-btn');
-                    editBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const n1 = prompt("Driver 1:", d.d1);
-                        if (n1 === null) return;
+                    card.className = 'vehicle-card' + (selectedVehicle?.plate === d.plate ? ' selected' : '');
+                    card.innerHTML = `<div class="card-content"><div class="card-plate">${d.plate}</div><div class="card-drivers">${d.d1}${d.d2 ? ' / ' + d.d2 : ''}</div></div><button class="edit-btn">✏️</button>`;
+                    card.onclick = (e) => e.target.classList.contains('edit-btn') ? null : selectVehicle(d);
+                    card.querySelector('.edit-btn').onclick = async () => {
+                        const n1 = prompt("Driver 1:", d.d1); if (!n1) return;
                         const n2 = prompt("Driver 2:", d.d2 || "");
-                        driversDB.get(d.plate).put(JSON.stringify({
-                            plate: d.plate,
-                            d1: n1,
-                            d2: n2 || undefined
-                        }));
-                    });
-
+                        await supabase.from('driver_profiles').upsert({ plate: d.plate, d1: n1, d2: n2 || null });
+                    };
                     poolEl.appendChild(card);
                 });
             }
 
             function selectVehicle(d) {
                 selectedVehicle = d;
-                selectionText.textContent = `Placing: ${d.plate} - Tap a spot`;
                 selectionBanner.classList.add('active');
+                selectionText.textContent = `Placing: ${d.plate} - Tap a spot`;
                 sidebar.classList.remove('open');
-                updatePool();
-                render();
+                updatePool(); render();
             }
 
-            function cancelSelectionMode() {
-                selectedVehicle = null;
-                selectionBanner.classList.remove('active');
-                updatePool();
-                render();
-            }
-
-            // === RENDER ===
             function render() {
-                const viewport = canvas.parentElement;
-                const w = viewport.clientWidth;
-                const h = viewport.clientHeight;
-
-                canvas.width = w * 2;
-                canvas.height = h * 2;
-
+                const vp = canvas.parentElement;
+                canvas.width = vp.clientWidth * 2; canvas.height = vp.clientHeight * 2;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.scale(2, 2);
-                ctx.translate(view.x, view.y);
-                ctx.scale(view.scale, view.scale);
-
-                ctx.fillStyle = "#64748b";
-                ctx.font = "800 22px Inter, sans-serif";
-                ctx.textAlign = "right";
-                ctx.fillText("⇠ ENTRANCE / EXIT", 60, 80 + 4.5 * CELL_H);
-
+                ctx.save(); ctx.scale(2, 2); ctx.translate(view.x, view.y); ctx.scale(view.scale, view.scale);
+                ctx.fillStyle = "#64748b"; ctx.font = "800 22px Inter"; ctx.textAlign = "right"; ctx.fillText("⇠ ENTRANCE", 60, 80 + 4.5 * CELL_H);
                 Object.values(SPOTS).forEach(s => {
-                    const { x, y, w, h, id, type, label } = s;
-
-                    if (type === 'takasago') ctx.fillStyle = "rgba(249,115,22,0.08)";
-                    else if (type === 'ev') ctx.fillStyle = "rgba(16,185,129,0.06)";
-                    else if (type === 'blocked') ctx.fillStyle = "#f8fafc";
-                    else ctx.fillStyle = "#fff";
-
-                    if (hover === id) ctx.fillStyle = "rgba(37,99,235,0.1)";
-                    ctx.fillRect(x, y, w, h);
-
-                    ctx.strokeStyle = type === 'takasago' ? "#f97316" : (type === 'ev' ? "#10b981" : "#e2e8f0");
-                    ctx.lineWidth = type === 'takasago' ? 2.5 : 1.5;
-                    ctx.strokeRect(x, y, w, h);
-
-                    if (type === 'blocked') {
-                        if (label.trim()) {
-                            ctx.fillStyle = "#94a3b8";
-                            ctx.font = "700 11px Inter, sans-serif";
-                            ctx.textAlign = "center";
-                            ctx.fillText(label, x + w / 2, y + h / 2 + 4);
-                        }
-                    } else {
-                        ctx.fillStyle = "#475569";
-                        ctx.font = "700 14px Inter, sans-serif";
-                        ctx.textAlign = "center";
-                        ctx.fillText(label, x + w / 2, y + h / 2 + 5);
-                        if (type === 'takasago') {
-                            ctx.fillStyle = "#ea580c";
-                            ctx.font = "800 8px Inter, sans-serif";
-                            ctx.fillText("TAKASAGO", x + w / 2, y + h / 2 + 17);
-                        }
+                    ctx.fillStyle = s.type === 'takasago' ? "rgba(249,115,22,0.08)" : (s.type === 'ev' ? "rgba(16,185,129,0.06)" : (s.type === 'blocked' ? "#f8fafc" : "#fff"));
+                    if (hover === s.id) ctx.fillStyle = "rgba(37,99,235,0.1)";
+                    ctx.fillRect(s.x, s.y, s.w, s.h);
+                    ctx.strokeStyle = s.type === 'takasago' ? "#f97316" : (s.type === 'ev' ? "#10b981" : "#e2e8f0");
+                    ctx.strokeRect(s.x, s.y, s.w, s.h);
+                    if (s.type !== 'blocked') {
+                        ctx.fillStyle = "#475569"; ctx.font = "700 14px Inter"; ctx.textAlign = "center"; ctx.fillText(s.label, s.x + s.w / 2, s.y + s.h / 2 + 5);
+                    } else if (s.label.trim()) {
+                        ctx.fillStyle = "#94a3b8"; ctx.font = "700 11px Inter"; ctx.textAlign = "center"; ctx.fillText(s.label, s.x + s.w / 2, s.y + s.h / 2 + 4);
                     }
-
-                    const plate = layout[id];
-                    if (plate && (!drag || drag.data.plate !== plate)) {
-                        drawCar(x + 8, y + 8, w - 16, h - 16, drivers[plate] || { plate }, false);
-                    }
+                    if (layout[s.id]) drawCar(s.x + 8, s.y + 8, s.w - 16, s.h - 16, localDrivers[layout[s.id]] || { plate: layout[s.id] });
                 });
-
-                ctx.restore();
-
-                if (drag) {
-                    ctx.save();
-                    ctx.scale(2, 2);
-                    drawCar(mouse.x - 55, mouse.y - 22, 110, 44, drag.data, true);
-                    ctx.restore();
-                }
-            }
-
-            function drawCar(x, y, w, h, d, ghost) {
-                ctx.save();
-                if (ghost) ctx.globalAlpha = 0.75;
-                ctx.fillStyle = "#0f172a";
-                ctx.beginPath();
-                ctx.roundRect(x, y, w, h, 8);
-                ctx.fill();
-                ctx.fillStyle = "#fff";
-                ctx.font = "700 12px Inter, sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(d.plate.split(' ')[1] || d.plate, x + w / 2, y + h / 2);
-                ctx.fillStyle = "rgba(255,255,255,0.6)";
-                ctx.font = "500 9px Inter, sans-serif";
-                ctx.fillText((d.d1 || '').split(' ')[0], x + w / 2, y + h / 2 + 12);
                 ctx.restore();
             }
 
-            // === PDF EXPORT ===
-            function exportPDF() {
-                // Save current view state
-                const savedView = { ...view };
-                
-                // Reset to a good viewing position for PDF
-                view = { x: 50, y: 30, scale: 0.65 };
-                render();
-
-                // Give time for render
-                setTimeout(() => {
-                    const imgData = canvas.toDataURL('image/png', 1.0);
-                    const pdf = new jsPDF({
-                        orientation: 'landscape',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-                    // Title
-                    pdf.setFontSize(18);
-                    pdf.setFont(undefined, 'bold');
-                    pdf.text('Living Hotel Kanzler - Parking Map', 14, 15);
-
-                    // Timestamp
-                    pdf.setFontSize(10);
-                    pdf.setFont(undefined, 'normal');
-                    const now = new Date();
-                    const timestamp = now.toLocaleString('de-DE', { 
-                        year: 'numeric', month: '2-digit', day: '2-digit',
-                        hour: '2-digit', minute: '2-digit'
-                    });
-                    pdf.text(`Generated: ${timestamp}`, pdfWidth - 14, 15, { align: 'right' });
-
-                    // Map image
-                    const imgWidth = pdfWidth - 28;
-                    const imgHeight = (canvas.height / canvas.width) * imgWidth;
-                    pdf.addImage(imgData, 'PNG', 14, 22, imgWidth, Math.min(imgHeight, pdfHeight - 32));
-
-                    // Download
-                    pdf.save(`Kanzler_Parking_${now.toISOString().split('T')[0]}.pdf`);
-
-                    // Restore view
-                    view = savedView;
-                    render();
-                }, 100);
+            function drawCar(x, y, w, h, d) {
+                ctx.save(); ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.roundRect(x, y, w, h, 8); ctx.fill();
+                ctx.fillStyle = "#fff"; ctx.font = "700 12px Inter"; ctx.textAlign = "center"; ctx.fillText(d.plate.split(' ')[1] || d.plate, x + w / 2, y + h / 2);
+                ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.font = "500 9px Inter"; ctx.fillText((d.d1 || '').split(' ')[0], x + w / 2, y + h / 2 + 12); ctx.restore();
             }
 
-            // === INTERACTION ===
-            function getWorldPos(clientX, clientY) {
+            canvas.onclick = (e) => {
                 const r = canvas.getBoundingClientRect();
-                const mx = clientX - r.left;
-                const my = clientY - r.top;
-                const wx = (mx - view.x) / view.scale;
-                const wy = (my - view.y) / view.scale;
-                return { mx, my, wx, wy };
-            }
+                const wx = (e.clientX - r.left - view.x) / view.scale;
+                const wy = (e.clientY - r.top - view.y) / view.scale;
+                const s = Object.values(SPOTS).find(s => wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h);
+                if (selectedVehicle) {
+                    if (s && s.type !== 'blocked') { moveVehicle(selectedVehicle.plate, s.id); selectedVehicle = null; selectionBanner.classList.remove('active'); }
+                } else if (s && layout[s.id]) { selectVehicle(localDrivers[layout[s.id]]); }
+            };
 
-            function findSpotAt(wx, wy) {
-                return Object.values(SPOTS).find(s =>
-                    wx >= s.x && wx <= s.x + s.w && wy >= s.y && wy <= s.y + s.h
-                );
-            }
+            document.getElementById('zoomIn').onclick = () => { view.scale *= 1.2; render(); };
+            document.getElementById('zoomOut').onclick = () => { view.scale /= 1.2; render(); };
+            document.getElementById('viewReset').onclick = () => { view = isMobile ? { x: 50, y: 20, scale: 0.5 } : { x: 180, y: 20, scale: 0.8 }; render(); };
+            fabPool.onclick = () => sidebar.classList.add('open');
+            document.getElementById('closeSidebar').onclick = () => sidebar.classList.remove('open');
+            document.getElementById('cancelSelection').onclick = () => { selectedVehicle = null; selectionBanner.classList.remove('active'); updatePool(); render(); };
 
-            canvas.addEventListener('mousemove', e => {
-                const p = getWorldPos(e.clientX, e.clientY);
-                mouse = { x: p.mx, y: p.my };
+            document.getElementById('pdfBtn').onclick = () => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                pdf.text('Parking Map Report', 14, 15);
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 14, 20, 260, 150);
+                pdf.save('Parking_Map.pdf');
+            };
 
-                if (pan) {
-                    view.x += e.clientX - pan.x;
-                    view.y += e.clientY - pan.y;
-                    pan = { x: e.clientX, y: e.clientY };
-                } else {
-                    const found = findSpotAt(p.wx, p.wy);
-                    hover = found ? found.id : null;
-                }
-                render();
-            });
-
-            canvas.addEventListener('mousedown', e => {
-                const p = getWorldPos(e.clientX, e.clientY);
-                const found = findSpotAt(p.wx, p.wy);
-
-                if (found && layout[found.id]) {
-                    drag = { origin: 'canvas', data: drivers[layout[found.id]] };
-                } else {
-                    pan = { x: e.clientX, y: e.clientY };
-                    canvas.style.cursor = 'grabbing';
-                }
-            });
-
-            window.addEventListener('mouseup', () => {
-                if (drag) {
-                    const plate = drag.data.plate;
-                    if (hover && SPOTS[hover].type !== 'blocked') {
-                        moveVehicle(plate, hover);
-                    } else if (drag.origin === 'canvas') {
-                        moveVehicle(plate, null);
-                    }
-                }
-                drag = null;
-                pan = null;
-                canvas.style.cursor = 'default';
-                render();
-            });
-
-            // Touch events
-            let touchStartTime = 0;
-            let touchStartPos = null;
-            let isTouchPanning = false;
-
-            canvas.addEventListener('touchstart', e => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                touchStartTime = Date.now();
-                touchStartPos = { x: touch.clientX, y: touch.clientY };
-                isTouchPanning = false;
-            }, { passive: false });
-
-            canvas.addEventListener('touchmove', e => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const dx = touch.clientX - touchStartPos.x;
-                const dy = touch.clientY - touchStartPos.y;
-
-                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                    isTouchPanning = true;
-                    view.x += touch.clientX - touchStartPos.x;
-                    view.y += touch.clientY - touchStartPos.y;
-                    touchStartPos = { x: touch.clientX, y: touch.clientY };
-                    render();
-                }
-            }, { passive: false });
-
-            canvas.addEventListener('touchend', e => {
-                e.preventDefault();
-                if (!isTouchPanning && Date.now() - touchStartTime < 300) {
-                    const touch = e.changedTouches[0];
-                    const p = getWorldPos(touch.clientX, touch.clientY);
-                    const found = findSpotAt(p.wx, p.wy);
-
-                    if (selectedVehicle) {
-                        if (found && found.type !== 'blocked') {
-                            moveVehicle(selectedVehicle.plate, found.id);
-                            cancelSelectionMode();
-                        }
-                    } else if (found && layout[found.id]) {
-                        selectVehicle(drivers[layout[found.id]]);
-                    }
-                }
-                isTouchPanning = false;
-            }, { passive: false });
-
-            // === UI EVENTS ===
-            fabPool.addEventListener('click', () => sidebar.classList.add('open'));
-            closeSidebar.addEventListener('click', () => sidebar.clist('open'));
-            cancelSelection.addEventListener('click', cancelSelectionMode);
-            pdfBtn.addEventListener('click', exportPDF);
-
-            document.getElementById('zoomIn').addEventListener('click', () => {
-                view.scale *= 1.25;
-                render();
-            });
-
-            document.getElementById('zoomOut').addEventListener('click', () => {
-                view.scale /= 1.25;
-                render();
-            });
-
-            document.getElementById('viewReset').addEventListener('click', () => {
-                view = { x: isMobile ? 50 : 180, y: 20, scale: isMobile ? 0.5 : 0.8 };
-                render();
-            });
-
-            document.getElementById('resetBtn').addEventListener('click', () => {
-                if (confirm('Reset all parking data?')) {
-                    spotsDB.map().once((v, k) => spotsDB.get(k).put(null));
-                }
-            });
-
-            window.addEventListener('resize', () => {
-                isMobile = window.innerWidth <= 768;
-                render();
-            });
-
-            // === INIT ===
-            buildSpots();
-            initSync();
-            if (isMobile) view = { x: 50, y: 20, scale: 0.5 };
-            setInterval(render, 50);
+            buildSpots(); initSupabase();
+            window.onresize = () => { isMobile = window.innerWidth <= 768; render(); };
+            setInterval(render, 100);
         })();
     </script>
 </body>
