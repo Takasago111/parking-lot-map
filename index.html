@@ -582,6 +582,14 @@
                 ["35 EV", "34 EV", "33 EV", "32 EV", "31 EV", "30 EV"].forEach((n, i) => reg(n, ex, sY + (8 + i) * CELL_H, CELL_W, CELL_H));
 
                 const hx = ex + CELL_W + 350, ix = hx + CELL_W;
+
+                // Add Top Blocked Row (Matching diagonal cross area in reference)
+                for (let i = 0; i < 5; i++) {
+                    reg(`TOP_BL_${i}`, ex + i * (ix - ex) / 4, sY - 2 * CELL_H, (ix - ex) / 4, CELL_H, 'blocked', " ");
+                }
+
+                // Column I (Rightmost top area)
+                reg("53_SHUTTER", ix, sY - CELL_H, CELL_W, CELL_H, 'blocked', "53 シャッター");
                 [54, 55, 56, 57].forEach((n, i) => reg(String(n), ix, sY + i * CELL_H, CELL_W, CELL_H));
                 const gridY = sY + 4 * CELL_H;
                 [[58, 59], [60, 61], [62, 63], [64, 65], [66, 67], [68, 69], [70, 71], [72, 73], [74, 75], [76, 77], [78, 79], [80, "81 Res."], ["82 Bld.", "83 Res."]]
@@ -670,17 +678,35 @@
                 ctx.save(); ctx.scale(2, 2); ctx.translate(view.x, view.y); ctx.scale(view.scale, view.scale);
                 ctx.fillStyle = "#64748b"; ctx.font = "800 22px Inter"; ctx.textAlign = "right"; ctx.fillText("⇠ ENTRANCE", 60, 80 + 4.5 * CELL_H);
                 Object.values(SPOTS).forEach(s => {
-                    ctx.fillStyle = s.type === 'takasago' ? "rgba(249,115,22,0.08)" : (s.type === 'ev' ? "rgba(16,185,129,0.06)" : (s.type === 'blocked' ? "#f8fafc" : "#fff"));
-                    if (hover === s.id) ctx.fillStyle = "rgba(37,99,235,0.1)";
-                    ctx.fillRect(s.x, s.y, s.w, s.h);
-                    ctx.strokeStyle = s.type === 'takasago' ? "#f97316" : (s.type === 'ev' ? "#10b981" : "#e2e8f0");
-                    ctx.strokeRect(s.x, s.y, s.w, s.h);
-                    if (s.type !== 'blocked') {
-                        ctx.fillStyle = "#475569"; ctx.font = "700 14px Inter"; ctx.textAlign = "center"; ctx.fillText(s.label, s.x + s.w / 2, s.y + s.h / 2 + 5);
-                    } else if (s.label.trim()) {
-                        ctx.fillStyle = "#94a3b8"; ctx.font = "700 11px Inter"; ctx.textAlign = "center"; ctx.fillText(s.label, s.x + s.w / 2, s.y + s.h / 2 + 4);
+                    const { x, y, w, h, id, type, label } = s;
+
+                    ctx.fillStyle = type === 'takasago' ? "rgba(249,115,22,0.08)" : (type === 'ev' ? "rgba(16,185,129,0.06)" : (type === 'blocked' ? "#f8fafc" : "#fff"));
+                    if (hover === id) ctx.fillStyle = "rgba(37,99,235,0.1)";
+                    ctx.fillRect(x, y, w, h);
+
+                    ctx.strokeStyle = type === 'takasago' ? "#f97316" : (type === 'ev' ? "#10b981" : "#e2e8f0");
+                    ctx.lineWidth = type === 'takasago' ? 2.5 : 1.5;
+                    ctx.strokeRect(x, y, w, h);
+
+                    if (type === 'blocked') {
+                        // Draw diagonal cross (X) for blocked cells
+                        ctx.strokeStyle = "#e2e8f0";
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y); ctx.lineTo(x + w, y + h);
+                        ctx.moveTo(x + w, y); ctx.lineTo(x, y + h);
+                        ctx.stroke();
+
+                        if (label.trim()) {
+                            ctx.fillStyle = "#94a3b8"; ctx.font = "700 11px Inter"; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, y + h / 2 + 4);
+                        }
+                    } else {
+                        ctx.fillStyle = "#475569"; ctx.font = "700 14px Inter"; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, y + h / 2 + 5);
+                        if (type === 'takasago') {
+                            ctx.fillStyle = "#ea580c"; ctx.font = "800 8px Inter"; ctx.fillText("TAKASAGO", x + w / 2, y + h / 2 + 17);
+                        }
                     }
-                    if (layout[s.id]) drawCar(s.x + 8, s.y + 8, s.w - 16, s.h - 16, localDrivers[layout[s.id]] || { plate: layout[s.id] });
+                    if (layout[id]) drawCar(x + 8, y + 8, w - 16, h - 16, localDrivers[layout[id]] || { plate: layout[id] });
                 });
                 ctx.restore();
             }
